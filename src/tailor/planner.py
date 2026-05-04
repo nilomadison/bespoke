@@ -79,7 +79,13 @@ def serialize_career(db: Session) -> dict:
                 "institution": e.institution,
                 "degree": e.degree,
                 "field": e.field,
+                "location": e.location,
+                "start_date": e.start_date.isoformat() if e.start_date else None,
                 "end_date": e.end_date.isoformat() if e.end_date else None,
+                "is_in_progress": e.is_in_progress,
+                "expected_end_date": (
+                    e.expected_end_date.isoformat() if e.expected_end_date else None
+                ),
                 "honors": e.honors,
                 "gpa": e.gpa,
             }

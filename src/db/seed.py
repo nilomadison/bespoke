@@ -20,7 +20,7 @@ from src.models.education import Certification, Education
 from src.models.job import EmploymentType, Job
 from src.models.profile import Profile
 from src.models.project import Project
-from src.models.skill import Skill
+from src.models.skill import JobSkill, Skill
 
 
 def _date(val: str | None) -> date | None:
@@ -46,7 +46,7 @@ def seed(seed_file: Path) -> None:
             profile.location = p.get("location")
             profile.linkedin_url = p.get("linkedin_url")
             profile.github_url = p.get("github_url")
-            profile.portfolio_url = p.get("portfolio_url")
+            profile.portfolio_url = p.get("portfolio_url") or None
             profile.baseline_summary = p.get("baseline_summary")
             db.commit()
             print("  Profile updated.")
@@ -67,6 +67,7 @@ def seed(seed_file: Path) -> None:
         print(f"  {len(data.get('skills', []))} skills upserted.")
 
         # Jobs + achievements (clear and re-insert by title+company)
+        job_map: dict[tuple[str, str], Job] = {}
         for j in data.get("jobs", []):
             existing_job = (
                 db.query(Job)
@@ -114,7 +115,34 @@ def seed(seed_file: Path) -> None:
                     sort_order=idx,
                 ))
             db.commit()
+            job_map[(j["company"], j["title"])] = job
         print(f"  {len(data.get('jobs', []))} jobs seeded.")
+
+        # JobSkills (clear and re-insert per job)
+        js_group_count = 0
+        for js_entry in data.get("job_skills", []):
+            job_key = (js_entry["job"]["company"], js_entry["job"]["title"])
+            job = job_map.get(job_key)
+            if not job:
+                print(f"  WARNING: job not found for job_skills entry: {job_key}")
+                continue
+            for existing in list(job.job_skills):
+                db.delete(existing)
+            db.flush()
+            for sk in js_entry.get("skills", []):
+                skill = skill_map.get(sk["name"])
+                if not skill:
+                    print(f"  WARNING: skill not found: {sk['name']}")
+                    continue
+                db.add(JobSkill(
+                    job_id=job.id,
+                    skill_id=skill.id,
+                    proficiency=sk.get("proficiency"),
+                    years_used=sk.get("years_used"),
+                ))
+            db.commit()
+            js_group_count += 1
+        print(f"  {js_group_count} job_skill groups seeded.")
 
         # Education
         for e in data.get("education", []):
@@ -129,8 +157,10 @@ def seed(seed_file: Path) -> None:
                 edu = Education(institution=e["institution"], degree=e["degree"], field=e["field"])
                 db.add(edu)
             edu.field = e.get("field", edu.field)
+            edu.location = e.get("location")
             edu.start_date = _date(e.get("start_date"))
             edu.end_date = _date(e.get("end_date"))
+            edu.expected_end_date = _date(e.get("expected_end_date"))
             edu.is_in_progress = e.get("is_in_progress", False)
             edu.gpa = e.get("gpa")
             edu.honors = e.get("honors")

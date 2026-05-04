@@ -110,3 +110,7 @@ Each mode compares the meaningful thing for that stage: field-by-field analysis 
 - **Sync SQLAlchemy, async httpx.** SQLite is sync; LLM calls run in a `ThreadPoolExecutor` via `asyncio.run()` to keep both patterns clean.
 - **Prompt versioning.** `sha256[:12]` of each prompt file is stored on every `TailoringSession` at generation time. Run the same job description through two prompt versions and use the compare CLI to audit the difference.
 - **Local-first.** No accounts, no cloud sync, no telemetry. Your career data stays in `data/bespoke.db`.
+
+## AI Assistance
+This project was developed with assistance from AI coding tools Claude Code.
+- Refer to [CLAUDE.md](CLAUDE.md) for repository-specific guidelines, commands, and architecture notes.

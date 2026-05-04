@@ -1,0 +1,26 @@
+<div id="cert-{{ cert.id }}" class="bg-white rounded-lg border border-gray-200 px-4 py-3 flex items-start justify-between gap-4">
+  <div class="flex-1">
+    <div class="font-medium text-gray-800">{{ cert.name }}</div>
+    <div class="text-sm text-gray-600">{{ cert.issuer }}</div>
+    <div class="text-xs text-gray-400 mt-0.5">
+      {% if cert.issue_date %}Issued {{ cert.issue_date.strftime('%b %Y') }}{% endif %}
+      {% if cert.expiry_date %}&nbsp;·&nbsp;Expires {{ cert.expiry_date.strftime('%b %Y') }}{% endif %}
+      {% if cert.credential_id %}&nbsp;·&nbsp;ID: {{ cert.credential_id }}{% endif %}
+    </div>
+  </div>
+  <div class="flex gap-2 shrink-0">
+    <button hx-get="/certifications/{{ cert.id }}/edit"
+            hx-target="#cert-{{ cert.id }}"
+            hx-swap="outerHTML"
+            class="text-xs text-gray-500 hover:text-indigo-600 px-2 py-1 rounded border border-gray-200 hover:border-indigo-300">
+      Edit
+    </button>
+    <button hx-post="/certifications/{{ cert.id }}/delete"
+            hx-target="#cert-{{ cert.id }}"
+            hx-swap="outerHTML"
+            hx-confirm="Delete '{{ cert.name }}'?"
+            class="text-xs text-red-500 hover:text-red-700 px-2 py-1 rounded border border-gray-200 hover:border-red-300">
+      Delete
+    </button>
+  </div>
+</div>

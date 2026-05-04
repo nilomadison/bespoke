@@ -1,0 +1,67 @@
+<details class="mt-8 border border-gray-200 rounded-lg overflow-hidden" open>
+  <summary class="bg-gray-50 border-b border-gray-200 px-5 py-3 flex items-center justify-between cursor-pointer select-none list-none">
+    <span class="text-sm font-medium text-gray-700">What went in</span>
+    <span class="text-xs text-gray-400">
+      {{ resolved_items | selectattr('include') | list | length }} included
+      {% set dropped = resolved_items | rejectattr('include') | list %}
+      {% if dropped %} · {{ dropped | length }} dropped{% endif %}
+    </span>
+  </summary>
+
+  <div class="divide-y divide-gray-100">
+    {# Included items #}
+    {% for item in resolved_items if item.include %}
+    <div class="px-5 py-3 flex gap-3">
+      <span class="mt-0.5 shrink-0 w-4 text-emerald-500 text-sm font-bold">✓</span>
+      <div class="min-w-0 flex-1">
+        <div class="flex items-baseline gap-2 flex-wrap">
+          <span class="text-xs font-semibold uppercase tracking-wide
+            {% if item.type == 'achievement' %}text-indigo-500
+            {% elif item.type == 'job' %}text-emerald-600
+            {% elif item.type == 'project' %}text-violet-500
+            {% elif item.type == 'skill_group' %}text-amber-500
+            {% elif item.type == 'education' %}text-sky-500
+            {% else %}text-gray-400{% endif %}">
+            {{ item.type.replace("_", " ") }}
+          </span>
+          {% if item.text %}
+          <span class="text-sm text-gray-800 truncate">{{ item.text }}</span>
+          {% endif %}
+        </div>
+        {% if item.rationale %}
+        <p class="text-xs text-gray-500 mt-0.5 leading-relaxed">{{ item.rationale }}</p>
+        {% endif %}
+        {% if item.emphasis_note and item.type != 'skill_group' %}
+        <p class="text-xs text-amber-600 mt-1 italic">→ {{ item.emphasis_note }}</p>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+
+    {# Dropped items — only shown if any exist #}
+    {% set dropped_items = resolved_items | rejectattr('include') | list %}
+    {% if dropped_items %}
+    <div class="bg-gray-50 px-5 py-2">
+      <p class="text-xs font-medium text-gray-400 uppercase tracking-wide">Dropped</p>
+    </div>
+    {% for item in dropped_items %}
+    <div class="px-5 py-3 flex gap-3 opacity-60">
+      <span class="mt-0.5 shrink-0 w-4 text-gray-400 text-sm">○</span>
+      <div class="min-w-0 flex-1">
+        <div class="flex items-baseline gap-2 flex-wrap">
+          <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">
+            {{ item.type.replace("_", " ") }}
+          </span>
+          {% if item.text %}
+          <span class="text-sm text-gray-500 line-through truncate">{{ item.text }}</span>
+          {% endif %}
+        </div>
+        {% if item.rationale %}
+        <p class="text-xs text-gray-400 mt-0.5 leading-relaxed">{{ item.rationale }}</p>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+  </div>
+</details>

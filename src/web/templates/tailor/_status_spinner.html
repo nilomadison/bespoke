@@ -1,0 +1,12 @@
+<div id="analysis-status"
+     hx-get="/tailor/{{ session.id }}/status"
+     hx-trigger="every 2s"
+     hx-swap="outerHTML"
+     class="flex flex-col items-center justify-center py-20 text-gray-400">
+  <svg class="animate-spin h-8 w-8 text-indigo-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+  </svg>
+  <p class="text-sm">Analyzing job description and building selection plan…</p>
+  <p class="text-xs text-gray-300 mt-1">This takes 10–30 seconds depending on the model.</p>
+</div>

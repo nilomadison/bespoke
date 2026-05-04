@@ -1,0 +1,66 @@
+{% extends "_base.html" %}
+{% block content %}
+<div class="max-w-2xl mx-auto py-8 px-4">
+
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Cover letter</h1>
+      <p class="text-sm text-gray-500">{{ session.job_title }} at {{ session.company_name }}</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="/tailor/{{ session.id }}/result"
+         class="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded hover:bg-gray-50">
+        ← Resume
+      </a>
+      {% if session.cover_letter_json %}
+      <form method="post" action="/tailor/{{ session.id }}/cover-letter">
+        <button type="submit"
+                class="px-4 py-2 text-sm text-indigo-600 border border-indigo-300 rounded hover:bg-indigo-50">
+          Regenerate
+        </button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if session.cover_letter_generating and not session.cover_letter_json %}
+  {% include "tailor/_cover_letter_spinner.html" %}
+
+  {% elif session.cover_letter_json %}
+  {% set cl = session.cover_letter_json %}
+  <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-8 space-y-5" id="cover-letter-preview">
+
+    {% if cl.salutation %}
+    <p class="text-gray-800">{{ cl.salutation }}</p>
+    {% endif %}
+
+    {% for para in cl.paragraphs %}
+    <p class="text-gray-800 leading-relaxed">{{ para }}</p>
+    {% endfor %}
+
+    {% if cl.closing %}
+    <p class="text-gray-800">{{ cl.closing }}</p>
+    {% endif %}
+
+  </div>
+
+  {% else %}
+  <div class="text-center py-20 text-gray-400">
+    <p class="mb-4">No cover letter generated yet.</p>
+    {% if session.generated_json %}
+    <form method="post" action="/tailor/{{ session.id }}/cover-letter">
+      <button type="submit"
+              class="px-5 py-2 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700">
+        Generate cover letter
+      </button>
+    </form>
+    {% else %}
+    <p class="text-sm">
+      <a href="/tailor/{{ session.id }}/plan" class="text-indigo-600 hover:underline">Generate the resume first →</a>
+    </p>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

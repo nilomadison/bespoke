@@ -1,0 +1,104 @@
+{% extends "_base.html" %}
+{% block title %}{{ 'Edit' if project else 'New' }} Project — {{ app_title }}{% endblock %}
+{% block content %}
+<div class="max-w-2xl">
+  <div class="flex items-center gap-3 mb-6">
+    <a href="/projects/" class="text-sm text-gray-500 hover:text-indigo-600">&larr; Projects</a>
+    <span class="text-gray-300">/</span>
+    <h1 class="text-2xl font-bold text-gray-900">{{ 'Edit project' if project else 'Add project' }}</h1>
+  </div>
+
+  <form method="post"
+        action="{{ '/projects/' + project.id|string if project else '/projects/' }}"
+        class="space-y-5 bg-white rounded-lg border border-gray-200 p-6">
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+      <input type="text" name="name" value="{{ project.name if project else '' }}" required
+             class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">One-line summary *</label>
+      <input type="text" name="summary" value="{{ project.summary if project else '' }}" required
+             placeholder="What does it do, in one sentence?"
+             class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Description <span class="font-normal text-gray-400">(detailed prose for LLM context)</span></label>
+      <textarea name="description" rows="4"
+                class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">{{ project.description if project else '' }}</textarea>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Repo URL</label>
+        <input type="url" name="repo_url" value="{{ project.repo_url if project else '' }}"
+               class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Live URL</label>
+        <input type="url" name="live_url" value="{{ project.live_url if project else '' }}"
+               class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Start date</label>
+        <input type="date" name="start_date"
+               value="{{ project.start_date.isoformat() if project and project.start_date else '' }}"
+               class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">End date</label>
+        <input type="date" name="end_date"
+               value="{{ project.end_date.isoformat() if project and project.end_date else '' }}"
+               class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 items-end">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Linked job <span class="font-normal text-gray-400">(optional)</span></label>
+        <select name="job_id"
+                class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+          <option value="">— None —</option>
+          {% for job in jobs %}
+          <option value="{{ job.id }}"
+                  {% if project and project.job_id == job.id %}selected{% endif %}>
+            {{ job.title }} @ {{ job.company }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Prominence (1–5)</label>
+        <input type="number" name="prominence" min="1" max="5"
+               value="{{ project.prominence if project else 3 }}"
+               class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+      </div>
+    </div>
+
+    <label class="flex items-center gap-2 text-sm text-gray-700">
+      <input type="checkbox" name="is_active"
+             {% if project and project.is_active %}checked{% endif %}
+             class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-400">
+      Actively maintained / in progress
+    </label>
+
+    <div class="flex gap-3 pt-2">
+      <button type="submit"
+              class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700">
+        {{ 'Save changes' if project else 'Add project' }}
+      </button>
+      <a href="/projects/"
+         class="px-4 py-2 text-sm text-gray-600 rounded border border-gray-300 hover:bg-gray-50">
+        Cancel
+      </a>
+    </div>
+
+  </form>
+</div>
+{% endblock %}

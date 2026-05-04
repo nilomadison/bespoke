@@ -1,0 +1,86 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Common commands
+
+```bash
+# Activate venv first (every session)
+source .venv/bin/activate
+
+# Run app (mock LLM avoids needing OPENROUTER_API_KEY)
+BESPOKE_MOCK_LLM=1 uvicorn src.web.app:app --reload
+
+# Tests — single file or single test
+pytest tests/test_planner.py
+pytest tests/test_planner.py::test_build_plan_returns_plan_items
+
+# Lint
+ruff check .
+ruff format .
+
+# Migrations (SQLite via Alembic)
+alembic upgrade head
+alembic revision --autogenerate -m "msg"
+
+# Re-seed local DB from data/seed.yaml
+python -m src.db.seed
+
+# Compare two tailoring sessions (prompt A/B)
+python -m src.tools.prompt_compare {list|analyze|plan|generate} <id_a> <id_b>
+```
+
+## Architecture
+
+The user's career database is the only source of truth; resumes and cover letters are generated artifacts. A `TailoringSession` walks through three LLM stages, each storing its output as JSON on the session row alongside a `sha256[:12]` hash of the prompt file used to produce it.
+
+**Pipeline (orchestrated in `src/web/routes/tailor.py`):**
+
+1. **Analyze** (`src/tailor/analyzer.py`) — extracts structured signals (required/preferred skills, role_level, tone, etc.) from the pasted JD into `analysis_json`.
+2. **Plan** (`src/tailor/planner.py`) — `serialize_career()` dumps the entire DB to JSON; the LLM picks items to include; the result is materialized as `PlanItem` rows.
+3. **Human review** — the user toggles `PlanItem.include` and edits `emphasis_note` via HTMX inline edits on the plan-review page. **This step is load-bearing, not just UX.** It is the chokepoint that lets the user catch upstream hallucinations and override scoring before any prose is written. Generation is gated on this step; do not add an "auto-advance" path that skips it.
+4. **Generate** (`src/tailor/generator.py`) — `resolve_plan_items()` (`src/tailor/resolver.py`) hydrates the soft-FK `PlanItem` rows into display-ready dicts grouped by job, then the LLM writes prose into `generated_json`.
+5. **Cover letter** (`src/tailor/cover_letter.py`) — optional, reuses the resolved plan items so the cover letter cites the same achievements as the resume. This is the **most prose-fragile artifact** — it has a higher LLM-tells bar than resume bullets and is the most likely place for stilted phrasing or invented narrative to leak in. Treat changes to its prompt with extra scrutiny.
+
+`src/tailor/scorer.py` is **deterministic, not LLM** — it computes skill coverage and role-level fit for the plan-review page. Keep it that way.
+
+**Prompts** live under `prompts/{analyze,plan,generate,cover_letter}/` as `system.md` + `user.md` pairs. `src/llm/prompt_loader.py` loads them by dotted name (`load_prompt("plan.system")`), caches with `lru_cache`, and exposes `get_prompt_hash()`. Every session records exactly which prompt version produced its output, which is what makes `prompt_compare` meaningful.
+
+**LLM client** is selected at runtime: real `OpenRouterClient` (`src/llm/openrouter.py`) or `MockLLMClient` (`src/llm/mock.py`) when `BESPOKE_MOCK_LLM=1`. Sync DB + async LLM is bridged by running httpx calls in a `ThreadPoolExecutor` from sync route handlers.
+
+**Models (`src/models/`):** `Profile` is a singleton (`id=1`, contact info + baseline summary). `Job` owns `Achievement`, `Project`, and `JobSkill` rows. `TailoringSession` has many `PlanItem` (cascade delete). `PlanItem.reference_id` is a **polymorphic soft-FK** (no DB constraint) — `item_type` (enum: JOB, ACHIEVEMENT, SKILL_GROUP, PROJECT, EDUCATION, CERTIFICATION) tells the resolver which table to look up. This is intentional; see invariants below.
+
+**HTMX pattern:** short-row entities (Skills, Education, Certs, Achievements) use inline edit returning fragment templates from `src/web/templates/`. Jobs and Projects (many fields) get their own edit pages. Status-polling endpoints like `/tailor/{id}/status` return spinner partials with `HX-Redirect` headers when background analysis/generation finishes.
+
+**Render:** `src/render/docx_renderer.py` is single-pass — reads `generated_json` + profile dict, writes Calibri 11pt / 0.75" margin paragraphs (ATS-friendly: no tables, no text boxes). `/tailor/{id}/export` streams the bytes.
+
+## The no-fabrication invariant
+
+**No content in any generated artifact may assert facts about the candidate that aren't traceable to the career database.** This applies to every LLM-written surface — resume bullets, the tailored summary, the cover letter, and any future generated prose. Metrics, dates, titles, employers, technologies, and narrative claims must all resolve back to a row in the career DB.
+
+Tests that enforce pieces of this contract:
+
+- `tests/test_generator.py::test_anti_hallucination_metric_in_context` — the metric a bullet cites must appear in the input context the generator sees.
+- `tests/test_resolver.py` — the resolver only surfaces data attached to `PlanItem` rows, so the generator literally cannot see anything else. Tests like `test_skill_group_item_uses_emphasis_note` and `test_missing_reference_id_returns_none_text` pin this contract.
+- `tests/test_planner.py::test_build_plan_skips_unknown_types` — the planner cannot conjure plan items pointing at types the resolver doesn't know how to hydrate.
+
+Any change to the generator, resolver, planner, or their prompts must keep these green. If you add a new generated artifact (e.g. LinkedIn blurb), it must go through `resolve_plan_items()` or an equivalent that gates the LLM's input to DB-backed data, and it needs an analogous traceability test.
+
+## Invariants — do not change without explicit discussion
+
+- **Polymorphic soft-FK on `PlanItem.reference_id`** — do not "fix" this with real foreign keys or one-table-per-type. The resolver and `prompt_compare` rely on the current shape.
+- **Scorer stays deterministic** — no LLM calls in `src/tailor/scorer.py`. It is the cheap, reproducible signal users see while reviewing the plan.
+- **Prompt hashing is mandatory** — every LLM call path must record the prompt hash on the session. Do not bypass `get_prompt_hash()` or stop persisting `*_prompt_version` fields; that is what makes the compare CLI and reproducibility work.
+- **Plan-review step is gated** — do not add a code path that goes from analyze → generate without the user's plan edits.
+- **Sync SQLAlchemy 2 only** — don't introduce `AsyncSession`. LLM calls are the only async surface.
+
+## Discipline for prompt and schema changes
+
+- **Prompt edits.** When you change anything under `prompts/`, run two sessions over the same fixture JD (one before, one after) and use `python -m src.tools.prompt_compare {analyze|plan|generate} <id_before> <id_after>` to inspect the delta. Commit the prompt change only after reading that diff.
+- **Model edits.** Any change to `src/models/` requires a generated and committed Alembic migration in `alembic/versions/`. Don't ship a model change with "I'll do the migration later" — the next person to run `alembic upgrade head` will diverge.
+
+## Conventions
+
+- **Tests use `tests/conftest.py` fixtures**: `db_session` (in-memory SQLite, seeds `Profile(id=1)`) and `client` (FastAPI TestClient with overridden `get_session`). Web route tests use `client`; domain logic tests use `db_session`.
+- **Config** lives in `src/config.py` as a `Settings` dataclass populated from `os.getenv`. Don't add pydantic-settings. New env vars go there.
+- **Python 3.14 deprecation warnings** from FastAPI/Starlette (`asyncio.iscoroutinefunction`) are upstream; ignore them.

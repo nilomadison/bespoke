@@ -1,0 +1,122 @@
+{% extends "_base.html" %}
+{% block content %}
+<div class="max-w-3xl mx-auto py-8 px-4">
+
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">{{ session.job_title }}</h1>
+      <p class="text-sm text-gray-500">{{ session.company_name }}</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="/tailor/{{ session.id }}/plan"
+         class="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded hover:bg-gray-50">
+        ← Back to plan
+      </a>
+      {% if session.generated_json %}
+      <a href="/tailor/{{ session.id }}/cover-letter"
+         class="px-4 py-2 text-sm text-indigo-600 border border-indigo-300 rounded hover:bg-indigo-50">
+        Cover letter
+      </a>
+      <form method="post" action="/tailor/{{ session.id }}/export">
+        <button type="submit"
+                class="px-5 py-2 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700">
+          Export .docx
+        </button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if session.status.value == 'generating' %}
+  <div id="generation-status"
+       hx-get="/tailor/{{ session.id }}/status"
+       hx-trigger="every 2s"
+       hx-swap="outerHTML"
+       class="flex flex-col items-center justify-center py-24 text-gray-400">
+    <svg class="animate-spin h-8 w-8 text-indigo-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+    </svg>
+    <p class="text-sm">Generating your resume…</p>
+    <p class="text-xs text-gray-300 mt-1">This takes 15–45 seconds depending on the model.</p>
+  </div>
+
+  {% elif session.generated_json %}
+  {% set r = session.generated_json %}
+  <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-8 space-y-7" id="resume-preview">
+
+    {% if r.summary %}
+    <section>
+      <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Summary</h2>
+      <p class="text-gray-800 leading-relaxed">{{ r.summary }}</p>
+    </section>
+    {% endif %}
+
+    {% if r.skills %}
+    <section>
+      <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Skills</h2>
+      <p class="text-gray-700">{{ r.skills }}</p>
+    </section>
+    {% endif %}
+
+    {% if r.experience %}
+    <section>
+      <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Experience</h2>
+      {% for exp in r.experience %}
+      {% set loop_exp = exp %}
+      {% include "tailor/_resume_section.html" %}
+      {% endfor %}
+    </section>
+    {% endif %}
+
+    {% if r.projects %}
+    <section>
+      <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Projects</h2>
+      {% for proj in r.projects %}
+      <div class="mb-3">
+        <span class="font-semibold text-gray-900">{{ proj.name }}</span>
+        {% if proj.description %}
+        <span class="text-gray-700"> — {{ proj.description }}</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </section>
+    {% endif %}
+
+    {% if r.education %}
+    <section>
+      <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Education</h2>
+      {% for edu in r.education %}
+      <div class="mb-2 flex items-baseline gap-2">
+        <span class="font-semibold text-gray-900">{{ edu.degree }}</span>
+        <span class="text-gray-500">— {{ edu.institution }}</span>
+        {% if edu.dates %}
+        <span class="text-gray-400 text-sm">{{ edu.dates }}</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </section>
+    {% endif %}
+
+  </div>
+
+  {% if session.generation_prompt_version %}
+  <p class="mt-4 text-xs text-gray-300 text-right font-mono">
+    prompt v{{ session.generation_prompt_version }}
+  </p>
+  {% endif %}
+
+  {% if resolved_items %}
+  {% include "tailor/_coverage_summary.html" %}
+  {% endif %}
+
+  {% else %}
+  <div class="text-center py-20 text-gray-400">
+    <p class="mb-4">No resume generated yet.</p>
+    <a href="/tailor/{{ session.id }}/plan"
+       class="text-indigo-600 hover:underline text-sm">Go to plan →</a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+<tr id="skill-{{ skill.id }}">
+  <td class="px-4 py-3 font-medium text-gray-800">{{ skill.name }}</td>
+  <td class="px-4 py-3 text-gray-500">{{ skill.category or '—' }}</td>
+  <td class="px-4 py-3 text-right">
+    <div class="flex gap-2 justify-end">
+      <button hx-get="/skills/{{ skill.id }}/edit"
+              hx-target="#skill-{{ skill.id }}"
+              hx-swap="outerHTML"
+              class="text-xs text-gray-500 hover:text-indigo-600 px-2 py-1 rounded border border-gray-200 hover:border-indigo-300">
+        Edit
+      </button>
+      <button hx-post="/skills/{{ skill.id }}/delete"
+              hx-target="#skill-{{ skill.id }}"
+              hx-swap="outerHTML"
+              hx-confirm="Delete '{{ skill.name }}'?"
+              class="text-xs text-red-500 hover:text-red-700 px-2 py-1 rounded border border-gray-200 hover:border-red-300">
+        Delete
+      </button>
+    </div>
+  </td>
+</tr>

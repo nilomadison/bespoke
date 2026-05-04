@@ -1,0 +1,10 @@
+{
+  "required_skills": ["Python", "FastAPI", "PostgreSQL", "Docker"],
+  "preferred_skills": ["Kubernetes", "Redis", "TypeScript"],
+  "role_level": "senior",
+  "domain": "backend",
+  "tone": "startup-casual",
+  "impact_signals": ["scale", "reliability", "developer_experience", "architecture"],
+  "red_flags": [],
+  "emphasis_guidance": "Emphasize systems at scale, API design, and mentorship. The team values pragmatic engineers who can own end-to-end features. Recent Python and cloud infrastructure experience should be front and center."
+}

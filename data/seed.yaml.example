@@ -1,0 +1,110 @@
+# Copy this to data/seed.yaml and fill in your real career data.
+# Run: python -m src.db.seed
+# Safe to re-run — upserts, does not duplicate.
+
+profile:
+  full_name: "Jane Smith"
+  email: "jane@example.com"
+  phone: "+1 (555) 000-0000"
+  location: "San Francisco, CA"
+  linkedin_url: "https://linkedin.com/in/janesmith"
+  github_url: "https://github.com/janesmith"
+  portfolio_url: ""
+  baseline_summary: >
+    Software engineer with 8 years of experience building scalable backend systems
+    and developer tools. Passionate about developer experience and observability.
+
+skills:
+  - name: Python
+    category: Languages
+  - name: Go
+    category: Languages
+  - name: TypeScript
+    category: Languages
+  - name: PostgreSQL
+    category: Databases
+  - name: Redis
+    category: Databases
+  - name: FastAPI
+    category: Frameworks
+  - name: Docker
+    category: Infrastructure
+  - name: Kubernetes
+    category: Infrastructure
+  - name: AWS
+    category: Cloud
+
+jobs:
+  - title: "Senior Software Engineer"
+    company: "Acme Corp"
+    location: "San Francisco, CA"
+    start_date: "2021-03-01"
+    end_date: null  # null = current role
+    employment_type: "full_time"
+    is_technical: true
+    sort_order: 0
+    summary: >
+      Lead engineer on the platform team, responsible for the core API and
+      internal developer tooling serving 50+ engineers.
+    achievements:
+      - text: "Redesigned the authentication service to support OAuth 2.0 and SAML SSO"
+        metric: "Reduced login-related support tickets by 60%"
+        impact_tags: [security, scale, reliability]
+        prominence: 5
+      - text: "Built an internal feature-flag service used by all product teams"
+        metric: "Enabled 3x faster A/B test iteration cycle"
+        impact_tags: [developer_experience, scale]
+        prominence: 4
+      - text: "Mentored 3 junior engineers; two were promoted within 12 months"
+        impact_tags: [leadership, mentorship]
+        prominence: 3
+
+  - title: "Software Engineer"
+    company: "StartupXYZ"
+    location: "Remote"
+    start_date: "2018-06-01"
+    end_date: "2021-02-28"
+    employment_type: "full_time"
+    is_technical: true
+    sort_order: 1
+    summary: "Full-stack engineer on a 5-person team, early employee #12."
+    achievements:
+      - text: "Built the real-time notifications system from scratch using WebSockets"
+        impact_tags: [scale, reliability, full_stack]
+        prominence: 4
+      - text: "Migrated the monolith to a microservices architecture"
+        metric: "Reduced average deploy time from 45 minutes to 8 minutes"
+        impact_tags: [devops, scale, architecture]
+        prominence: 5
+
+education:
+  - institution: "University of California, Berkeley"
+    degree: "B.S."
+    field: "Computer Science"
+    start_date: "2014-08-01"
+    end_date: "2018-05-15"
+    is_in_progress: false
+    gpa: 3.8
+    honors: "Magna Cum Laude"
+
+certifications:
+  - name: "AWS Certified Solutions Architect – Associate"
+    issuer: "Amazon Web Services"
+    issue_date: "2022-06-01"
+    expiry_date: "2025-06-01"
+    credential_id: "ABC123"
+    credential_url: ""
+
+projects:
+  - name: "Bespoke"
+    summary: "Local-first career database and LLM-powered resume tailoring tool"
+    description: >
+      FastAPI + SQLite app that treats your career history as structured data and uses
+      a two-stage LLM pipeline to generate tailored resumes. No fabrication — the LLM
+      selects and rephrases real achievements, never invents.
+    repo_url: "https://github.com/janesmith/bespoke"
+    live_url: ""
+    start_date: "2025-01-01"
+    end_date: null
+    is_active: true
+    prominence: 5

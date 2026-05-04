@@ -1,0 +1,52 @@
+<div class="bg-indigo-50 rounded-lg border border-indigo-100 px-5 py-4 space-y-3">
+  <div class="flex items-center gap-4 flex-wrap text-sm">
+    {% if session.analysis_json.role_level %}
+    <span class="font-medium text-indigo-700">{{ session.analysis_json.role_level.title() }}</span>
+    {% endif %}
+    {% if session.analysis_json.domain %}
+    <span class="text-indigo-500">{{ session.analysis_json.domain.title() }}</span>
+    {% endif %}
+    {% if session.analysis_json.tone %}
+    <span class="text-xs bg-white border border-indigo-200 text-indigo-600 px-2 py-0.5 rounded-full">{{ session.analysis_json.tone }}</span>
+    {% endif %}
+  </div>
+
+  {% if session.analysis_json.required_skills %}
+  <div>
+    <p class="text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Required skills</p>
+    <div class="flex flex-wrap gap-1">
+      {% for skill in session.analysis_json.required_skills %}
+      <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">{{ skill }}</span>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if session.analysis_json.preferred_skills %}
+  <div>
+    <p class="text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Preferred</p>
+    <div class="flex flex-wrap gap-1">
+      {% for skill in session.analysis_json.preferred_skills %}
+      <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{{ skill }}</span>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if session.analysis_json.impact_signals %}
+  <div>
+    <p class="text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Values</p>
+    <div class="flex flex-wrap gap-1">
+      {% for signal in session.analysis_json.impact_signals %}
+      <span class="text-xs bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full">{{ signal }}</span>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if session.analysis_json.emphasis_guidance %}
+  <p class="text-xs text-gray-600 italic border-t border-indigo-100 pt-3">
+    {{ session.analysis_json.emphasis_guidance }}
+  </p>
+  {% endif %}
+</div>

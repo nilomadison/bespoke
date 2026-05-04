@@ -1,0 +1,70 @@
+<div class="mt-4 border border-gray-200 rounded-lg overflow-hidden">
+  <div class="bg-gray-50 border-b border-gray-200 px-5 py-3 flex items-center justify-between">
+    <h3 class="text-sm font-medium text-gray-700">Profile match</h3>
+    <div class="flex items-center gap-4 text-xs text-gray-500">
+      <span>Required:
+        <span class="font-semibold
+          {% if score.required.pct >= 75 %}text-emerald-600
+          {% elif score.required.pct >= 50 %}text-amber-600
+          {% else %}text-red-500{% endif %}">
+          {{ score.required.pct }}%
+        </span>
+      </span>
+      {% if score.preferred.matched or score.preferred.missing %}
+      <span>Preferred:
+        <span class="font-semibold
+          {% if score.preferred.pct >= 75 %}text-sky-600
+          {% else %}text-gray-500{% endif %}">
+          {{ score.preferred.pct }}%
+        </span>
+      </span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="px-5 py-4 space-y-3">
+    {# Required skills #}
+    {% if score.required.matched or score.required.missing %}
+    <div>
+      <p class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1.5">Required skills</p>
+      <div class="flex flex-wrap gap-1.5">
+        {% for s in score.required.matched %}
+        <span class="text-xs px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full">{{ s }}</span>
+        {% endfor %}
+        {% for s in score.required.missing %}
+        <span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-400 rounded-full line-through decoration-gray-300">{{ s }}</span>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {# Preferred skills #}
+    {% if score.preferred.matched or score.preferred.missing %}
+    <div>
+      <p class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1.5">Preferred skills</p>
+      <div class="flex flex-wrap gap-1.5">
+        {% for s in score.preferred.matched %}
+        <span class="text-xs px-2 py-0.5 bg-sky-50 text-sky-700 border border-sky-200 rounded-full">{{ s }}</span>
+        {% endfor %}
+        {% for s in score.preferred.missing %}
+        <span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-400 rounded-full line-through decoration-gray-300">{{ s }}</span>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {# Role level note #}
+    {% if score.role_level_note %}
+    <p class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2 leading-relaxed">
+      {{ score.role_level_note }}
+    </p>
+    {% endif %}
+
+    {# Domain gap warning #}
+    {% if not score.domain_match %}
+    <p class="text-xs text-orange-700 bg-orange-50 border border-orange-200 rounded px-3 py-2">
+      No technical roles found in your experience — consider adding relevant jobs before generating.
+    </p>
+    {% endif %}
+  </div>
+</div>

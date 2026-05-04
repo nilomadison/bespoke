@@ -1,0 +1,39 @@
+{
+  "summary": "Staff backend engineer with 8+ years building distributed systems at scale in Python and Go. Led platform teams shipping services handling hundreds of millions of requests per day. Focused on developer experience — making infrastructure invisible so product teams can move faster.",
+  "experience": [
+    {
+      "company": "Widgets Inc",
+      "title": "Staff Platform Engineer",
+      "dates": "Jan 2021 – Present",
+      "bullets": [
+        "Designed and scaled the API gateway to handle 500M requests per day, reducing p99 latency by 40% through connection pooling and request coalescing.",
+        "Led a 12-service microservices migration that eliminated cross-team deploy dependencies and cut average deploy time from 45 minutes to under 8.",
+        "Built internal developer platform tooling adopted by 50+ engineers, reducing new service bootstrap time from 2 days to under 30 minutes."
+      ]
+    },
+    {
+      "company": "Acme Systems",
+      "title": "Senior Backend Engineer",
+      "dates": "Mar 2018 – Dec 2020",
+      "bullets": [
+        "Owned the data ingestion pipeline processing 10TB/day of event data with sub-second latency SLAs.",
+        "Introduced distributed tracing and SLO dashboards that reduced mean time to detect incidents from 18 minutes to 4 minutes.",
+        "Mentored 3 junior engineers through a structured growth program, all of whom were promoted within 12 months."
+      ]
+    }
+  ],
+  "skills": "Python, FastAPI, PostgreSQL, Docker, Kubernetes, Redis, AWS, Terraform, Go",
+  "projects": [
+    {
+      "name": "Bespoke",
+      "description": "Local-first resume tailoring tool using a two-stage LLM pipeline (FastAPI, HTMX, SQLite). Demonstrates pragmatic LLM application architecture with structured JSON output and prompt versioning."
+    }
+  ],
+  "education": [
+    {
+      "institution": "University of California, Berkeley",
+      "degree": "B.S. Computer Science",
+      "dates": "2012 – 2016"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{% extends "_base.html" %}
+{% block title %}Achievements — {{ app_title }}{% endblock %}
+{% block content %}
+<div class="max-w-3xl">
+  <h1 class="text-2xl font-bold text-gray-900 mb-4">Achievements for job {{ job_id }}</h1>
+  <div id="achievement-list" class="space-y-2">
+    {% for achievement in achievements %}
+      {% include "achievements/_row.html" %}
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

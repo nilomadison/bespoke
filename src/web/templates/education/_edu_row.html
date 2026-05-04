@@ -1,0 +1,28 @@
+<div id="edu-{{ item.id }}" class="bg-white rounded-lg border border-gray-200 px-4 py-3 flex items-start justify-between gap-4">
+  <div class="flex-1">
+    <div class="font-medium text-gray-800">{{ item.degree }} in {{ item.field }}</div>
+    <div class="text-sm text-gray-600">{{ item.institution }}</div>
+    <div class="text-xs text-gray-400 mt-0.5">
+      {{ item.start_date.strftime('%Y') if item.start_date else '' }}
+      –
+      {% if item.is_in_progress %}Present{% elif item.end_date %}{{ item.end_date.strftime('%Y') }}{% endif %}
+      {% if item.gpa %}&nbsp;·&nbsp;GPA {{ item.gpa }}{% endif %}
+      {% if item.honors %}&nbsp;·&nbsp;{{ item.honors }}{% endif %}
+    </div>
+  </div>
+  <div class="flex gap-2 shrink-0">
+    <button hx-get="/education/{{ item.id }}/edit"
+            hx-target="#edu-{{ item.id }}"
+            hx-swap="outerHTML"
+            class="text-xs text-gray-500 hover:text-indigo-600 px-2 py-1 rounded border border-gray-200 hover:border-indigo-300">
+      Edit
+    </button>
+    <button hx-post="/education/{{ item.id }}/delete"
+            hx-target="#edu-{{ item.id }}"
+            hx-swap="outerHTML"
+            hx-confirm="Delete this education entry?"
+            class="text-xs text-red-500 hover:text-red-700 px-2 py-1 rounded border border-gray-200 hover:border-red-300">
+      Delete
+    </button>
+  </div>
+</div>

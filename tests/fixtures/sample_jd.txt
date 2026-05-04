@@ -1,0 +1,24 @@
+Senior Backend Engineer — Platform Team
+
+We're looking for a senior backend engineer to join our platform team. You'll own core infrastructure that serves millions of requests per day and enables 50+ engineers to ship faster.
+
+What you'll do:
+- Design and build scalable APIs and internal services in Python/FastAPI
+- Lead technical projects end-to-end, from design doc to production
+- Mentor junior engineers and contribute to engineering culture
+- Improve developer experience through tooling and documentation
+
+What we're looking for:
+- 5+ years of backend engineering experience
+- Strong Python skills; FastAPI or similar async framework experience
+- PostgreSQL and Redis experience at scale
+- Docker and Kubernetes for service deployment
+- Experience with distributed systems and observability
+- A track record of owning impactful projects
+
+Nice to have:
+- TypeScript/Node.js for internal tooling
+- Experience at a startup or fast-moving team
+- Open source contributions
+
+We're a startup (~80 people), Series B, remote-first. We move fast and value engineers who can think from first principles.

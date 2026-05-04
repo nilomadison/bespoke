@@ -1,0 +1,48 @@
+<div id="edu-{{ item.id }}" class="bg-indigo-50 rounded-lg border border-indigo-200 px-4 py-3">
+  <form hx-post="/education/{{ item.id }}"
+        hx-target="#edu-{{ item.id }}"
+        hx-swap="outerHTML"
+        class="space-y-3">
+    <div class="grid grid-cols-3 gap-3">
+      <div>
+        <input type="text" name="institution" value="{{ item.institution }}" required
+               placeholder="Institution"
+               class="w-full rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+      </div>
+      <div>
+        <input type="text" name="degree" value="{{ item.degree }}" required placeholder="B.S."
+               class="w-full rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+      </div>
+      <div>
+        <input type="text" name="field" value="{{ item.field }}" required
+               class="w-full rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+      </div>
+    </div>
+    <div class="grid grid-cols-4 gap-3">
+      <input type="date" name="start_date"
+             value="{{ item.start_date.isoformat() if item.start_date else '' }}"
+             class="rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+      <input type="date" name="end_date"
+             value="{{ item.end_date.isoformat() if item.end_date else '' }}"
+             class="rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+      <input type="number" name="gpa" step="0.01" min="0" max="4"
+             value="{{ item.gpa or '' }}" placeholder="GPA"
+             class="rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+      <input type="text" name="honors" value="{{ item.honors or '' }}" placeholder="Honors"
+             class="rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+    </div>
+    <div class="flex gap-2">
+      <button type="submit"
+              class="px-3 py-1 bg-indigo-600 text-white text-xs font-medium rounded hover:bg-indigo-700">
+        Save
+      </button>
+      <button type="button"
+              hx-get="/education/{{ item.id }}/view"
+              hx-target="#edu-{{ item.id }}"
+              hx-swap="outerHTML"
+              class="px-3 py-1 text-xs text-gray-600 rounded border border-gray-300 hover:bg-gray-50">
+        Cancel
+      </button>
+    </div>
+  </form>
+</div>

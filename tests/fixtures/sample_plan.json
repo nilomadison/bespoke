@@ -1,0 +1,40 @@
+{
+  "items": [
+    {
+      "type": "job",
+      "id": 1,
+      "emphasis_note": "Lead with the platform engineering scope and team size",
+      "rationale": "Most recent role, directly matches senior backend engineer requirements"
+    },
+    {
+      "type": "achievement",
+      "id": 1,
+      "emphasis_note": "Highlight the scale and reliability angle",
+      "rationale": "Directly demonstrates impact at scale, a key signal in the job description"
+    },
+    {
+      "type": "achievement",
+      "id": 2,
+      "emphasis_note": "Frame as developer experience improvement",
+      "rationale": "Matches the team's stated value of developer experience"
+    },
+    {
+      "type": "skill_group",
+      "id": null,
+      "emphasis_note": "Python, FastAPI, PostgreSQL, Docker, Kubernetes",
+      "rationale": "Exact match to required and preferred skills"
+    },
+    {
+      "type": "project",
+      "id": 1,
+      "emphasis_note": "Mention the LLM engineering and FastAPI stack",
+      "rationale": "Demonstrates initiative and modern Python stack"
+    },
+    {
+      "type": "education",
+      "id": 1,
+      "emphasis_note": null,
+      "rationale": "Standard inclusion"
+    }
+  ]
+}

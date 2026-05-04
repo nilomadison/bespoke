@@ -1,0 +1,9 @@
+{
+  "salutation": "Dear Hiring Team,",
+  "paragraphs": [
+    "I'm excited to apply for the Senior Backend Engineer role at Acme Corp. The team's focus on developer experience and building infrastructure that lets product engineers move faster is exactly the kind of impact I want to have — it's work I've been doing for the past several years and find genuinely energizing.",
+    "At Widgets Inc, I designed and scaled the API gateway to handle 500M requests per day, reducing p99 latency by 40% through connection pooling and request coalescing. I also built internal developer platform tooling adopted by 50+ engineers, which cut new service bootstrap time from two days to under 30 minutes. These are the kinds of high-leverage investments I believe your platform team is looking to make.",
+    "I work best in environments where engineers own their services end-to-end and infrastructure decisions are made close to the problem. I've found that the clearest wins come from embedding reliability and observability early, and from making the right path the easy path for the engineers shipping product."
+  ],
+  "closing": "Thank you for taking the time to read this. I'd love to talk about how my background aligns with what you're building."
+}

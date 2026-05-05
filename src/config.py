@@ -12,7 +12,7 @@ class Settings:
         )
     )
     default_model: str = field(
-        default_factory=lambda: os.getenv("DEFAULT_MODEL", "anthropic/claude-3.5-sonnet")
+        default_factory=lambda: os.getenv("DEFAULT_MODEL", "anthropic/claude-sonnet-4-6")
     )
     data_dir: str = field(default_factory=lambda: os.getenv("DATA_DIR", "data"))
     db_echo: bool = field(default_factory=lambda: os.getenv("DB_ECHO", "false").lower() == "true")

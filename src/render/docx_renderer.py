@@ -100,6 +100,19 @@ def render_to_docx(generated: dict, profile: dict) -> DocxDocument:
             if dates:
                 edu_para.add_run(f"   {dates}").font.size = Pt(10)
 
+    # --- Certifications ---
+    if generated.get("certifications"):
+        doc.add_heading("Certifications", level=1)
+        for cert in generated["certifications"]:
+            cert_para = doc.add_paragraph()
+            name_run = cert_para.add_run(cert.get("name", ""))
+            name_run.bold = True
+            name_run.font.name = "Calibri"
+            suffix_parts = [cert.get("issuer", ""), cert.get("year", "")]
+            suffix = ", ".join(p for p in suffix_parts if p)
+            if suffix:
+                cert_para.add_run(f"  ({suffix})").font.size = Pt(10)
+
     return doc
 
 

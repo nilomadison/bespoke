@@ -5,13 +5,13 @@ from sqlalchemy.orm import Session, selectinload
 
 from src.llm.client import LLMClient
 from src.llm.mock_client import MockLLMClient
+from src.llm.parse import parse_llm_json
 from src.llm.prompt_loader import get_prompt_hash, load_prompt
 from src.models.achievement import Achievement
 from src.models.education import Certification, Education
 from src.models.job import Job
 from src.models.project import Project
 from src.models.tailoring import PlanItemType, TailoringSession
-from src.tailor.analyzer import _strip_fences
 
 
 def resolve_plan_items(session: TailoringSession, db: Session) -> dict:
@@ -207,8 +207,15 @@ async def generate_resume(
         max_tokens=8192,
     )
 
-    cleaned = _strip_fences(raw)
-    result = json.loads(cleaned)
+    result = parse_llm_json(raw, "generate")
+
+    _REQUIRED_GENERATE_FIELDS = ("summary", "experience", "skills", "projects", "education")
+    missing = [f for f in _REQUIRED_GENERATE_FIELDS if f not in result]
+    if missing:
+        raise ValueError(
+            f"[generate] LLM response missing required fields: {missing}. "
+            f"Got keys: {list(result.keys())}"
+        )
 
     session.generated_json = result
     session.generation_prompt_version = get_prompt_hash("generate.system")

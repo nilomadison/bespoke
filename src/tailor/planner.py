@@ -1,18 +1,21 @@
 import json
+import logging
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from src.llm.client import LLMClient
 from src.llm.mock_client import MockLLMClient
+from src.llm.parse import parse_llm_json
 from src.llm.prompt_loader import load_prompt
-from src.models.achievement import Achievement
 from src.models.education import Certification, Education
 from src.models.job import Job
 from src.models.project import Project
 from src.models.skill import Skill
-from src.models.tailoring import PlanItem, PlanItemType, TailoringSession
-from src.tailor.analyzer import JobAnalysis, _strip_fences
+from src.models.tailoring import PlanItem, PlanItemType
+from src.tailor.analyzer import JobAnalysis
+
+logger = logging.getLogger(__name__)
 
 
 def serialize_career(db: Session) -> dict:
@@ -140,8 +143,20 @@ async def build_plan(
         max_tokens=4096,
     )
 
-    cleaned = _strip_fences(raw)
-    plan_data = json.loads(cleaned)
+    plan_data = parse_llm_json(raw, "plan")
+
+    valid_ids: dict[str, set[int]] = {
+        "job":           {j["id"] for j in career_context["jobs"]},
+        "achievement":   {
+            a["id"]
+            for j in career_context["jobs"]
+            for a in j["achievements"]
+        },
+        "skill_group":   set(),
+        "project":       {p["id"] for p in career_context["projects"]},
+        "education":     {e["id"] for e in career_context["education"]},
+        "certification": {c["id"] for c in career_context["certifications"]},
+    }
 
     items = []
     for idx, row in enumerate(plan_data.get("items", [])):
@@ -149,13 +164,29 @@ async def build_plan(
         try:
             item_type = PlanItemType(item_type_str)
         except ValueError:
-            continue  # skip unrecognized types rather than crash
+            logger.warning("[plan] Unrecognized item type %r; skipping", item_type_str)
+            continue
+
+        ref_id = row.get("id")
+        if item_type == PlanItemType.SKILL_GROUP:
+            ref_id = None
+        else:
+            if ref_id is None:
+                logger.warning("[plan] %r item missing id; skipping", item_type_str)
+                continue
+            if ref_id not in valid_ids.get(item_type_str, set()):
+                logger.warning(
+                    "[plan] %r id=%r not found in career data; skipping hallucinated reference",
+                    item_type_str,
+                    ref_id,
+                )
+                continue
 
         items.append(
             PlanItem(
                 session_id=session_id,
                 item_type=item_type,
-                reference_id=row.get("id"),
+                reference_id=ref_id,
                 include=True,
                 emphasis_note=row.get("emphasis_note"),
                 llm_rationale=row.get("rationale"),

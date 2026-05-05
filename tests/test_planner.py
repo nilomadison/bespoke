@@ -1,16 +1,14 @@
 import asyncio
 from datetime import date
 
-import pytest
-
 from src.llm.mock_client import MockLLMClient
+from src.models.achievement import Achievement
 from src.models.education import Education
 from src.models.job import Job
 from src.models.project import Project
 from src.models.tailoring import PlanItem, TailoringSession, TailoringStatus
 from src.tailor.analyzer import JobAnalysis
 from src.tailor.planner import build_plan, serialize_career
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -55,7 +53,7 @@ def make_education(db) -> Education:
 
 
 def make_project(db) -> Project:
-    p = Project(name="Side Project", prominence=4)
+    p = Project(name="Side Project", summary="A side project.", prominence=4)
     db.add(p)
     db.commit()
     db.refresh(p)
@@ -68,6 +66,23 @@ DUMMY_ANALYSIS = JobAnalysis(
     domain="backend",
     tone="startup-casual",
 )
+
+
+def seed_career(db) -> Job:
+    """Seed DB records that match the IDs in tests/fixtures/sample_plan.json.
+
+    The fixture references job id=1, achievement id=1, achievement id=2,
+    project id=1, education id=1. SQLite auto-increments from 1, so the first
+    record of each type gets id=1.
+    """
+    job = make_job(db)
+    ach1 = Achievement(job_id=job.id, text="First achievement", prominence=5)
+    ach2 = Achievement(job_id=job.id, text="Second achievement", prominence=4)
+    db.add_all([ach1, ach2])
+    make_education(db)
+    make_project(db)
+    db.commit()
+    return job
 
 # ---------------------------------------------------------------------------
 # serialize_career
@@ -101,8 +116,7 @@ def test_serialize_career_with_education(db_session):
 # ---------------------------------------------------------------------------
 
 def test_build_plan_returns_plan_items(db_session):
-    # The mock fixture (sample_plan.json) has 6 items.
-    # We don't need real DB rows because plan items use soft FKs.
+    seed_career(db_session)
     session = make_session(db_session)
     client = MockLLMClient()
 
@@ -113,6 +127,7 @@ def test_build_plan_returns_plan_items(db_session):
 
 
 def test_build_plan_persists_to_db(db_session):
+    seed_career(db_session)
     session = make_session(db_session)
     client = MockLLMClient()
 
@@ -123,6 +138,7 @@ def test_build_plan_persists_to_db(db_session):
 
 
 def test_build_plan_all_included_by_default(db_session):
+    seed_career(db_session)
     session = make_session(db_session)
     client = MockLLMClient()
 
@@ -132,6 +148,7 @@ def test_build_plan_all_included_by_default(db_session):
 
 
 def test_build_plan_sort_order_sequential(db_session):
+    seed_career(db_session)
     session = make_session(db_session)
     client = MockLLMClient()
 
@@ -142,12 +159,12 @@ def test_build_plan_sort_order_sequential(db_session):
 
 
 def test_build_plan_rationale_populated(db_session):
+    seed_career(db_session)
     session = make_session(db_session)
     client = MockLLMClient()
 
     items = asyncio.run(build_plan(session.id, DUMMY_ANALYSIS, db_session, client))
 
-    # At least some items should have an LLM rationale from the fixture
     rationales = [i.llm_rationale for i in items if i.llm_rationale]
     assert len(rationales) > 0
 

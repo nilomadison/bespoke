@@ -98,6 +98,21 @@
     </section>
     {% endif %}
 
+    {% if r.certifications %}
+    <section>
+      <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Certifications</h2>
+      {% for cert in r.certifications %}
+      <div class="mb-2 flex items-baseline gap-2">
+        <span class="font-semibold text-gray-900">{{ cert.name }}</span>
+        <span class="text-gray-500">— {{ cert.issuer }}</span>
+        {% if cert.year %}
+        <span class="text-gray-400 text-sm">{{ cert.year }}</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </section>
+    {% endif %}
+
   </div>
 
   {% if session.generation_prompt_version %}

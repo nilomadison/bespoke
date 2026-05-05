@@ -5,9 +5,9 @@ from sqlalchemy.orm import Session, selectinload
 
 from src.llm.client import LLMClient
 from src.llm.mock_client import MockLLMClient
+from src.llm.parse import parse_llm_json
 from src.llm.prompt_loader import load_prompt
 from src.models.tailoring import TailoringSession
-from src.tailor.analyzer import _strip_fences
 from src.tailor.generator import resolve_plan_items
 
 
@@ -47,8 +47,7 @@ async def generate_cover_letter(
         max_tokens=2048,
     )
 
-    cleaned = _strip_fences(raw)
-    result = json.loads(cleaned)
+    result = parse_llm_json(raw, "cover_letter")
 
     session.cover_letter_json = result
     session.cover_letter_generating = False

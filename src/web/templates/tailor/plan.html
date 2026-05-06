@@ -9,13 +9,13 @@
     <span class="text-sm text-gray-600">{{ session.job_title }} @ {{ session.company_name }}</span>
   </div>
 
-  <!-- Analyzing state: show spinner -->
-  {% if session.status.value in ('draft', 'analyzing') %}
-    {% include "tailor/_status_spinner.html" %}
+  <!-- Error state (analysis failed → status reverted to draft with error_message) -->
+  {% if session.status.value == 'draft' and session.error_message %}
+    {% with stage="analysis" %}{% include "tailor/_status_error.html" %}{% endwith %}
 
-  <!-- Error state -->
-  {% elif session.status.value == 'draft' and session.error_message %}
-    {% include "tailor/_status_error.html" %}
+  <!-- Analyzing state: show spinner -->
+  {% elif session.status.value in ('draft', 'analyzing') %}
+    {% include "tailor/_status_spinner.html" %}
 
   <!-- Plan ready -->
   {% else %}
@@ -35,8 +35,19 @@
     <div class="mt-6">
       <div class="flex items-center justify-between mb-3">
         <h2 class="text-lg font-semibold text-gray-800">Selected items</h2>
-        <span class="text-xs text-gray-400">{{ session.plan_items | selectattr('include') | list | length }} of {{ session.plan_items | length }} included</span>
+        <div class="flex items-center gap-3">
+          <button type="button"
+                  class="text-xs text-indigo-600 hover:text-indigo-800"
+                  hx-get="/tailor/{{ session.id }}/plan/add"
+                  hx-target="#add-item-panel"
+                  hx-swap="innerHTML">
+            + Add item
+          </button>
+          <span class="text-xs text-gray-400">{{ session.plan_items | selectattr('include') | list | length }} of {{ session.plan_items | length }} included</span>
+        </div>
       </div>
+
+      <div id="add-item-panel"></div>
 
       <div id="plan-item-list" class="space-y-2">
         {% for item in session.plan_items %}
@@ -50,6 +61,29 @@
     </div>
 
     {% include "tailor/_plan_actions.html" %}
+
+    <script>
+      (function () {
+        const list = document.getElementById('plan-item-list');
+        if (!list || typeof Sortable === 'undefined') return;
+        Sortable.create(list, {
+          handle: '.plan-item-drag-handle',
+          animation: 150,
+          ghostClass: 'opacity-40',
+          onEnd: function () {
+            const ids = Array.from(list.querySelectorAll('.plan-item'))
+              .map(el => el.dataset.itemId);
+            const body = new URLSearchParams();
+            ids.forEach(id => body.append('item_ids', id));
+            fetch('/tailor/{{ session.id }}/plan/reorder', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: body.toString(),
+            });
+          },
+        });
+      })();
+    </script>
   {% endif %}
 
 </div>

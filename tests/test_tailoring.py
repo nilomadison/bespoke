@@ -7,6 +7,7 @@ Background tasks are NOT run in these tests — we manually set session state to
 simulate what the analysis pipeline would produce, keeping tests fast and deterministic.
 """
 import pytest
+from sqlalchemy import select
 
 from src.models.tailoring import PlanItem, PlanItemType, TailoringSession, TailoringStatus
 
@@ -559,3 +560,462 @@ def test_cover_letter_status_redirects_when_done(client, db_session):
 def test_cover_letter_status_404_for_missing(client):
     resp = client.get("/tailor/99999/cover-letter/status")
     assert resp.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# Retry analysis / generation
+# ---------------------------------------------------------------------------
+
+def test_retry_analysis_clears_plan_items_and_resets_status(client, db_session):
+    s = TailoringSession(
+        job_title="Staff Engineer",
+        company_name="Widgets Inc",
+        job_description="Build scalable systems.",
+        status=TailoringStatus.DRAFT,
+        analysis_json={"required_skills": ["Python"], "preferred_skills": [],
+                       "role_level": "staff", "domain": "backend", "tone": "formal",
+                       "impact_signals": [], "red_flags": [], "emphasis_guidance": ""},
+        analysis_prompt_version="abc123",
+        error_message="LLM timeout",
+    )
+    db_session.add(s)
+    db_session.commit()
+    db_session.refresh(s)
+    make_plan_item(db_session, s.id)
+    make_plan_item(db_session, s.id)
+
+    resp = client.post(f"/tailor/{s.id}/retry-analysis", follow_redirects=False)
+    assert resp.status_code == 303
+    assert f"/tailor/{s.id}/plan" in resp.headers["location"]
+
+    db_session.refresh(s)
+    assert s.status == TailoringStatus.ANALYZING
+    assert s.analysis_json is None
+    assert s.analysis_prompt_version is None
+    assert s.error_message is None
+    assert len(s.plan_items) == 0
+    # Crucially, the JD survives so the user doesn't lose their paste
+    assert s.job_description == "Build scalable systems."
+
+
+def test_retry_analysis_404_for_missing(client):
+    resp = client.post("/tailor/99999/retry-analysis", follow_redirects=False)
+    assert resp.status_code == 404
+
+
+def test_retry_generation_clears_generated_json_and_resets_status(client, db_session):
+    s = make_session(db_session, status=TailoringStatus.PLAN_EDITED)
+    s.generated_json = GENERATED_JSON
+    s.generation_prompt_version = "def456"
+    s.error_message = "Schema validation failed"
+    db_session.commit()
+    make_plan_item(db_session, s.id)
+
+    resp = client.post(f"/tailor/{s.id}/retry-generation", follow_redirects=False)
+    assert resp.status_code == 303
+    assert f"/tailor/{s.id}/result" in resp.headers["location"]
+
+    db_session.refresh(s)
+    assert s.status == TailoringStatus.GENERATING
+    assert s.generated_json is None
+    assert s.generation_prompt_version is None
+    assert s.error_message is None
+    # Plan items survive a generation retry
+    assert len(s.plan_items) == 1
+
+
+def test_retry_generation_404_for_missing(client):
+    resp = client.post("/tailor/99999/retry-generation", follow_redirects=False)
+    assert resp.status_code == 404
+
+
+def test_plan_page_shows_error_with_retry_button(client, db_session):
+    s = TailoringSession(
+        job_title="X", company_name="Y", job_description="Z",
+        status=TailoringStatus.DRAFT,
+        error_message="Connection refused",
+    )
+    db_session.add(s)
+    db_session.commit()
+    db_session.refresh(s)
+
+    resp = client.get(f"/tailor/{s.id}/plan")
+    assert resp.status_code == 200
+    assert b"Connection refused" in resp.content
+    assert b"Retry analysis" in resp.content
+    assert f"/tailor/{s.id}/retry-analysis".encode() in resp.content
+
+
+def test_result_page_shows_error_with_retry_button(client, db_session):
+    s = make_session(db_session, status=TailoringStatus.PLAN_EDITED)
+    s.error_message = "Generator returned malformed JSON"
+    db_session.commit()
+
+    resp = client.get(f"/tailor/{s.id}/result")
+    assert resp.status_code == 200
+    assert b"Generator returned malformed JSON" in resp.content
+    assert b"Retry generation" in resp.content
+    assert f"/tailor/{s.id}/retry-generation".encode() in resp.content
+
+
+# ---------------------------------------------------------------------------
+# Reorder plan items
+# ---------------------------------------------------------------------------
+
+def test_reorder_updates_sort_order(client, db_session):
+    s = make_session(db_session)
+    a = make_plan_item(db_session, s.id)
+    b = make_plan_item(db_session, s.id)
+    c = make_plan_item(db_session, s.id)
+
+    # Reverse the order
+    resp = client.post(
+        f"/tailor/{s.id}/plan/reorder",
+        data={"item_ids": [c.id, b.id, a.id]},
+    )
+    assert resp.status_code == 204
+
+    db_session.refresh(a); db_session.refresh(b); db_session.refresh(c)
+    assert c.sort_order == 0
+    assert b.sort_order == 10
+    assert a.sort_order == 20
+
+
+def test_reorder_marks_session_plan_edited(client, db_session):
+    s = make_session(db_session, status=TailoringStatus.ANALYZED)
+    a = make_plan_item(db_session, s.id)
+    b = make_plan_item(db_session, s.id)
+
+    client.post(
+        f"/tailor/{s.id}/plan/reorder",
+        data={"item_ids": [b.id, a.id]},
+    )
+    db_session.refresh(s)
+    assert s.status == TailoringStatus.PLAN_EDITED
+
+
+def test_reorder_rejects_foreign_item_ids(client, db_session):
+    s1 = make_session(db_session)
+    s2 = make_session(db_session)
+    a = make_plan_item(db_session, s1.id)
+    b = make_plan_item(db_session, s2.id)
+
+    # Try to reorder s1's plan including an item from s2
+    resp = client.post(
+        f"/tailor/{s1.id}/plan/reorder",
+        data={"item_ids": [a.id, b.id]},
+    )
+    assert resp.status_code == 400
+
+
+def test_reorder_rejects_partial_item_ids(client, db_session):
+    s = make_session(db_session)
+    a = make_plan_item(db_session, s.id)
+    make_plan_item(db_session, s.id)
+
+    resp = client.post(
+        f"/tailor/{s.id}/plan/reorder",
+        data={"item_ids": [a.id]},  # missing the other item
+    )
+    assert resp.status_code == 400
+
+
+def test_reorder_404_for_missing_session(client):
+    resp = client.post(
+        "/tailor/99999/plan/reorder",
+        data={"item_ids": [1]},
+    )
+    assert resp.status_code == 404
+
+
+def test_plan_item_renders_drag_handle(client, db_session):
+    s = make_session(db_session)
+    make_plan_item(db_session, s.id)
+    resp = client.get(f"/tailor/{s.id}/plan")
+    assert resp.status_code == 200
+    assert b"plan-item-drag-handle" in resp.content
+    assert b"data-item-id" in resp.content
+
+
+# ---------------------------------------------------------------------------
+# Add custom plan item — picker (GET) and create (POST)
+# ---------------------------------------------------------------------------
+
+def _make_achievement(db, job_id: int, text: str = "Built thing.", metric: str | None = None):
+    from src.models.achievement import Achievement
+    a = Achievement(job_id=job_id, text=text, metric=metric, prominence=3, sort_order=0)
+    db.add(a); db.commit(); db.refresh(a)
+    return a
+
+
+def _make_job(db, title: str = "Engineer", company: str = "Acme"):
+    from datetime import date
+    from src.models.job import Job, EmploymentType
+    j = Job(title=title, company=company, employment_type=EmploymentType.FULL_TIME,
+            start_date=date(2020, 1, 1), is_technical=True, sort_order=0)
+    db.add(j); db.commit(); db.refresh(j)
+    return j
+
+
+def test_picker_lists_unused_achievements(client, db_session):
+    s = make_session(db_session)
+    j = _make_job(db_session)
+    a1 = _make_achievement(db_session, j.id, text="Reduced latency 50%.")
+    a2 = _make_achievement(db_session, j.id, text="Mentored 4 juniors.")
+
+    # Put a1 on the plan; a2 should be available in the picker
+    item = PlanItem(
+        session_id=s.id, item_type=PlanItemType.ACHIEVEMENT, reference_id=a1.id,
+        include=True, sort_order=0,
+    )
+    db_session.add(item); db_session.commit()
+
+    resp = client.get(f"/tailor/{s.id}/plan/add")
+    assert resp.status_code == 200
+    assert b"Mentored 4 juniors." in resp.content
+    assert b"Reduced latency 50%." not in resp.content
+
+
+def test_picker_404_for_missing_session(client):
+    resp = client.get("/tailor/99999/plan/add")
+    assert resp.status_code == 404
+
+
+def test_add_achievement_creates_planitem(client, db_session):
+    s = make_session(db_session)
+    j = _make_job(db_session)
+    a = _make_achievement(db_session, j.id, text="Shipped feature.")
+
+    resp = client.post(
+        f"/tailor/{s.id}/plan/add",
+        data={"item_type": "achievement", "reference_id": a.id},
+    )
+    assert resp.status_code == 200
+    assert resp.headers.get("HX-Redirect") == f"/tailor/{s.id}/plan"
+
+    items = [i for i in db_session.scalars(
+        select(PlanItem).where(PlanItem.session_id == s.id)
+    ).all()]
+    assert len(items) == 1
+    assert items[0].item_type == PlanItemType.ACHIEVEMENT
+    assert items[0].reference_id == a.id
+    assert items[0].include is True
+    assert items[0].llm_rationale == "Added by user"
+
+
+def test_add_skill_group_uses_emphasis_note(client, db_session):
+    s = make_session(db_session)
+    resp = client.post(
+        f"/tailor/{s.id}/plan/add",
+        data={"item_type": "skill_group", "emphasis_note": "Kubernetes, Terraform"},
+    )
+    assert resp.status_code == 200
+
+    items = list(db_session.scalars(
+        select(PlanItem).where(PlanItem.session_id == s.id)
+    ).all())
+    assert len(items) == 1
+    assert items[0].item_type == PlanItemType.SKILL_GROUP
+    assert items[0].reference_id is None
+    assert items[0].emphasis_note == "Kubernetes, Terraform"
+
+
+def test_add_skill_group_rejects_empty_note(client, db_session):
+    s = make_session(db_session)
+    resp = client.post(
+        f"/tailor/{s.id}/plan/add",
+        data={"item_type": "skill_group", "emphasis_note": "   "},
+    )
+    assert resp.status_code == 400
+
+
+def test_add_rejects_invalid_item_type(client, db_session):
+    s = make_session(db_session)
+    resp = client.post(
+        f"/tailor/{s.id}/plan/add",
+        data={"item_type": "bogus", "reference_id": 1},
+    )
+    assert resp.status_code == 400
+
+
+def test_add_rejects_unknown_reference_id(client, db_session):
+    s = make_session(db_session)
+    resp = client.post(
+        f"/tailor/{s.id}/plan/add",
+        data={"item_type": "achievement", "reference_id": 99999},
+    )
+    assert resp.status_code == 400
+
+
+def test_add_marks_session_plan_edited(client, db_session):
+    s = make_session(db_session, status=TailoringStatus.ANALYZED)
+    j = _make_job(db_session)
+    a = _make_achievement(db_session, j.id)
+
+    client.post(
+        f"/tailor/{s.id}/plan/add",
+        data={"item_type": "achievement", "reference_id": a.id},
+    )
+    db_session.refresh(s)
+    assert s.status == TailoringStatus.PLAN_EDITED
+
+
+# ---------------------------------------------------------------------------
+# Inline-editable result page
+# ---------------------------------------------------------------------------
+
+def _make_generated(db) -> TailoringSession:
+    s = TailoringSession(
+        job_title="Eng", company_name="Acme", job_description="x",
+        status=TailoringStatus.GENERATED,
+        analysis_json={"required_skills": [], "preferred_skills": [], "role_level": "senior",
+                       "domain": "b", "tone": "f", "impact_signals": [], "red_flags": [],
+                       "emphasis_guidance": ""},
+        generated_json={
+            "summary": "Original summary.",
+            "skills": "Python, Go",
+            "experience": [
+                {"title": "Engineer", "company": "Acme", "dates": "2021–Now",
+                 "bullets": ["Built X.", "Shipped Y."]},
+                {"title": "Junior Eng", "company": "Beta", "dates": "2019–2021",
+                 "bullets": ["Did Z."]},
+            ],
+            "projects": [{"name": "Bespoke", "description": "Tool."}],
+            "education": [{"degree": "B.S.", "institution": "MIT", "dates": "2015–2019"}],
+            "certifications": [{"name": "AWS SAA", "issuer": "Amazon", "year": "2022"}],
+        },
+    )
+    db.add(s); db.commit(); db.refresh(s)
+    return s
+
+
+def test_edit_summary_persists(client, db_session):
+    s = _make_generated(db_session)
+    resp = client.post(
+        f"/tailor/{s.id}/result/field",
+        data={"path": "summary", "value": "New polished summary."},
+    )
+    assert resp.status_code == 200
+    db_session.refresh(s)
+    assert s.generated_json["summary"] == "New polished summary."
+    # Other fields unchanged
+    assert s.generated_json["skills"] == "Python, Go"
+
+
+def test_edit_bullet_persists(client, db_session):
+    s = _make_generated(db_session)
+    resp = client.post(
+        f"/tailor/{s.id}/result/field",
+        data={"path": "experience.0.bullets.1", "value": "Shipped Y on time."},
+    )
+    assert resp.status_code == 200
+    db_session.refresh(s)
+    assert s.generated_json["experience"][0]["bullets"][1] == "Shipped Y on time."
+    # Sibling bullets unchanged
+    assert s.generated_json["experience"][0]["bullets"][0] == "Built X."
+
+
+def test_edit_experience_title(client, db_session):
+    s = _make_generated(db_session)
+    resp = client.post(
+        f"/tailor/{s.id}/result/field",
+        data={"path": "experience.1.title", "value": "Software Engineer"},
+    )
+    assert resp.status_code == 200
+    db_session.refresh(s)
+    assert s.generated_json["experience"][1]["title"] == "Software Engineer"
+
+
+def test_edit_invalid_path_rejected(client, db_session):
+    s = _make_generated(db_session)
+    resp = client.post(
+        f"/tailor/{s.id}/result/field",
+        data={"path": "experience.0.malicious_field", "value": "x"},
+    )
+    assert resp.status_code == 400
+
+
+def test_edit_arbitrary_top_level_path_rejected(client, db_session):
+    s = _make_generated(db_session)
+    resp = client.post(
+        f"/tailor/{s.id}/result/field",
+        data={"path": "__class__", "value": "x"},
+    )
+    assert resp.status_code == 400
+
+
+def test_edit_out_of_range_index_rejected(client, db_session):
+    s = _make_generated(db_session)
+    resp = client.post(
+        f"/tailor/{s.id}/result/field",
+        data={"path": "experience.99.title", "value": "x"},
+    )
+    assert resp.status_code == 400
+
+
+def test_add_bullet_appends_empty_string(client, db_session):
+    s = _make_generated(db_session)
+    resp = client.post(
+        f"/tailor/{s.id}/result/bullet/add",
+        data={"experience_index": 0},
+    )
+    assert resp.status_code == 200
+    db_session.refresh(s)
+    assert len(s.generated_json["experience"][0]["bullets"]) == 3
+    assert s.generated_json["experience"][0]["bullets"][2] == ""
+
+
+def test_delete_bullet_removes_index(client, db_session):
+    s = _make_generated(db_session)
+    resp = client.post(
+        f"/tailor/{s.id}/result/bullet/delete",
+        data={"experience_index": 0, "bullet_index": 0},
+    )
+    assert resp.status_code == 200
+    db_session.refresh(s)
+    assert s.generated_json["experience"][0]["bullets"] == ["Shipped Y."]
+
+
+def test_export_uses_edited_text(client, db_session):
+    s = _make_generated(db_session)
+    client.post(
+        f"/tailor/{s.id}/result/field",
+        data={"path": "summary", "value": "Hand-polished summary."},
+    )
+    resp = client.post(f"/tailor/{s.id}/export")
+    assert resp.status_code == 200
+    # The .docx is binary; just confirm export completes and the JSON now reflects the edit
+    db_session.refresh(s)
+    assert s.generated_json["summary"] == "Hand-polished summary."
+
+
+def test_edit_404_when_no_generated_json(client, db_session):
+    s = make_session(db_session)
+    resp = client.post(
+        f"/tailor/{s.id}/result/field",
+        data={"path": "summary", "value": "x"},
+    )
+    assert resp.status_code == 404
+
+
+def test_add_uses_increasing_sort_order(client, db_session):
+    s = make_session(db_session)
+    j = _make_job(db_session)
+    a1 = _make_achievement(db_session, j.id, text="One.")
+    a2 = _make_achievement(db_session, j.id, text="Two.")
+
+    # Existing item with sort_order=50 — added items should land after
+    existing = PlanItem(
+        session_id=s.id, item_type=PlanItemType.ACHIEVEMENT, reference_id=a1.id,
+        sort_order=50, include=True,
+    )
+    db_session.add(existing); db_session.commit()
+
+    client.post(
+        f"/tailor/{s.id}/plan/add",
+        data={"item_type": "achievement", "reference_id": a2.id},
+    )
+    new_items = [i for i in db_session.scalars(
+        select(PlanItem).where(PlanItem.session_id == s.id, PlanItem.reference_id == a2.id)
+    ).all()]
+    assert new_items[0].sort_order == 60

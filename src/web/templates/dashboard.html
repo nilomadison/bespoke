@@ -1,0 +1,108 @@
+{% extends "_base.html" %}
+{% block title %}Home — {{ app_title }}{% endblock %}
+{% block content %}
+<div class="max-w-4xl">
+
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">
+      {% if profile and profile.full_name %}Welcome back, {{ profile.full_name.split(" ")[0] }}.{% else %}Welcome.{% endif %}
+    </h1>
+    <p class="text-sm text-gray-500 mt-1">Tailor your resume to a job description in three steps.</p>
+  </div>
+
+  {% if profile_warning %}
+  <div class="mb-6 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800 flex items-center justify-between">
+    <span>{{ profile_warning }}</span>
+    <a href="/profile" class="text-xs text-amber-900 hover:underline shrink-0 ml-3">Edit profile →</a>
+  </div>
+  {% endif %}
+
+  <div class="rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-700 text-white px-6 py-6 mb-8 flex items-center justify-between gap-4">
+    <div>
+      <h2 class="text-lg font-semibold">Start a new tailoring</h2>
+      <p class="text-sm text-indigo-100 mt-1">Paste a job description; we'll draft a plan from your career data.</p>
+    </div>
+    <a href="/tailor/new"
+       class="px-5 py-2.5 bg-white text-indigo-700 font-semibold text-sm rounded hover:bg-indigo-50 shrink-0">
+      + New application
+    </a>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <section class="lg:col-span-2">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Recent sessions</h2>
+        <a href="/tailor/" class="text-xs text-indigo-600 hover:underline">View all →</a>
+      </div>
+      {% if sessions_view %}
+      <div class="space-y-2">
+        {% for sv in sessions_view %}
+        {% set s = sv.s %}
+        {% set score = sv.score %}
+        <a href="/tailor/{{ s.id }}/{% if s.status.value in ('generated', 'exported') %}result{% else %}plan{% endif %}"
+           class="block rounded-lg border border-gray-200 bg-white px-4 py-3 hover:border-indigo-300 hover:shadow-sm">
+          <div class="flex items-baseline justify-between gap-3">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-baseline gap-2">
+                <span class="font-semibold text-gray-900 truncate">{{ s.job_title }}</span>
+                <span class="text-sm text-gray-500 truncate">@ {{ s.company_name }}</span>
+              </div>
+              <div class="flex items-center gap-2 mt-1 flex-wrap">
+                <span class="text-xs px-2 py-0.5 rounded-full font-medium
+                  {% if s.status.value in ('analyzed', 'plan_edited') %}bg-blue-100 text-blue-700
+                  {% elif s.status.value in ('generated', 'exported') %}bg-green-100 text-green-700
+                  {% elif s.status.value in ('analyzing', 'generating') %}bg-yellow-100 text-yellow-700
+                  {% elif s.status.value == 'draft' and s.error_message %}bg-red-100 text-red-700
+                  {% else %}bg-gray-100 text-gray-500{% endif %}">
+                  {{ s.status.value.replace('_', ' ').title() }}
+                </span>
+                <span class="text-xs text-gray-400">{{ s.created_at.strftime('%b %d') }}</span>
+                {% if score %}
+                <span class="text-xs text-gray-500">
+                  Required <span class="font-semibold {% if score.required.pct >= 75 %}text-emerald-600{% elif score.required.pct >= 50 %}text-amber-600{% else %}text-red-600{% endif %}">{{ score.required.pct }}%</span>
+                  · Preferred <span class="font-semibold {% if score.preferred.pct >= 75 %}text-emerald-600{% elif score.preferred.pct >= 50 %}text-amber-600{% else %}text-red-600{% endif %}">{{ score.preferred.pct }}%</span>
+                </span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="text-center py-10 border-2 border-dashed border-gray-200 rounded-xl">
+        <p class="text-gray-400 text-sm">No sessions yet — your past tailorings will live here.</p>
+      </div>
+      {% endif %}
+    </section>
+
+    <section>
+      <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">Career data</h2>
+      <div class="rounded-lg border border-gray-200 bg-white divide-y divide-gray-100">
+        <a href="/jobs/" class="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
+          <span class="text-sm text-gray-700">Jobs</span>
+          <span class="text-sm font-semibold text-gray-900">{{ counts.jobs }}</span>
+        </a>
+        <a href="/skills/" class="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
+          <span class="text-sm text-gray-700">Skills</span>
+          <span class="text-sm font-semibold text-gray-900">{{ counts.skills }}</span>
+        </a>
+        <a href="/projects/" class="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
+          <span class="text-sm text-gray-700">Projects</span>
+          <span class="text-sm font-semibold text-gray-900">{{ counts.projects }}</span>
+        </a>
+        <a href="/education/" class="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
+          <span class="text-sm text-gray-700">Education</span>
+          <span class="text-sm font-semibold text-gray-900">{{ counts.education }}</span>
+        </a>
+        <a href="/certifications/" class="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
+          <span class="text-sm text-gray-700">Certifications</span>
+          <span class="text-sm font-semibold text-gray-900">{{ counts.certifications }}</span>
+        </a>
+      </div>
+    </section>
+
+  </div>
+</div>
+{% endblock %}

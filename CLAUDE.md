@@ -38,7 +38,7 @@ The user's career database is the only source of truth; resumes and cover letter
 
 1. **Analyze** (`src/tailor/analyzer.py`) — extracts structured signals (required/preferred skills, role_level, tone, etc.) from the pasted JD into `analysis_json`.
 2. **Plan** (`src/tailor/planner.py`) — `serialize_career()` dumps the entire DB to JSON; the LLM picks items to include; the result is materialized as `PlanItem` rows.
-3. **Human review** — the user toggles `PlanItem.include` and edits `emphasis_note` via HTMX inline edits on the plan-review page. **This step is load-bearing, not just UX.** It is the chokepoint that lets the user catch upstream hallucinations and override scoring before any prose is written. Generation is gated on this step; do not add an "auto-advance" path that skips it.
+3. **Human review** — on the plan-review page the user can toggle `PlanItem.include`, edit `emphasis_note`, drag-reorder (`PlanItem.sort_order`, via SortableJS + `POST /tailor/{id}/plan/reorder`), and add items the LLM missed via the picker (`GET/POST /tailor/{id}/plan/add`, which writes new `PlanItem` rows using the polymorphic soft-FK). If analysis itself failed, `POST /tailor/{id}/retry-analysis` clears the prior plan and re-runs without losing the JD. **This step is load-bearing, not just UX.** It is the chokepoint that lets the user catch upstream hallucinations and override scoring before any prose is written. Generation is gated on this step; do not add an "auto-advance" path that skips it.
 4. **Generate** (`src/tailor/generator.py`) — `resolve_plan_items()` (`src/tailor/resolver.py`) hydrates the soft-FK `PlanItem` rows into display-ready dicts grouped by job, then the LLM writes prose into `generated_json`.
 5. **Cover letter** (`src/tailor/cover_letter.py`) — optional, reuses the resolved plan items so the cover letter cites the same achievements as the resume. This is the **most prose-fragile artifact** — it has a higher LLM-tells bar than resume bullets and is the most likely place for stilted phrasing or invented narrative to leak in. Treat changes to its prompt with extra scrutiny.
 
@@ -52,7 +52,12 @@ The user's career database is the only source of truth; resumes and cover letter
 
 **HTMX pattern:** short-row entities (Skills, Education, Certs, Achievements) use inline edit returning fragment templates from `src/web/templates/`. Jobs and Projects (many fields) get their own edit pages. Status-polling endpoints like `/tailor/{id}/status` return spinner partials with `HX-Redirect` headers when background analysis/generation finishes.
 
-**Render:** `src/render/docx_renderer.py` is single-pass — reads `generated_json` + profile dict, writes Calibri 11pt / 0.75" margin paragraphs (ATS-friendly: no tables, no text boxes). `/tailor/{id}/export` streams the bytes.
+**Render:** two parallel single-pass renderers read `generated_json` + profile dict and stream bytes — both ATS-friendly (no tables, no text boxes, single-column flow, 0.75" margins).
+
+- `src/render/docx_renderer.py` (`POST /tailor/{id}/export`) — python-docx, Calibri 11pt.
+- `src/render/pdf_renderer.py` (`GET /tailor/{id}/export.pdf`) — ReportLab, Helvetica 11pt (PDF-safe substitute for Calibri; bundling Calibri.ttf is a license issue).
+
+**`generated_json` is mutable post-generation.** The result page exposes inline-edit routes (`POST /tailor/{id}/result/field`, `/result/bullet/add`, `/result/bullet/delete`) that mutate `session.generated_json` directly with no LLM call. Both exporters read from the live JSON, so user edits flow through to .docx and .pdf. Field paths are validated against the allowlist regex set in `tailor.py` (`_ALLOWED_RESULT_PATHS`) — extend that list when adding new editable fields, and do not loosen it to accept arbitrary paths.
 
 ## The no-fabrication invariant
 

@@ -1,15 +1,18 @@
 <div class="mb-5">
-  <div class="flex items-baseline justify-between mb-0.5">
-    <span class="font-semibold text-gray-900">{{ loop_exp.title }}</span>
-    <span class="text-sm text-gray-400">{{ loop_exp.dates }}</span>
+  <div class="flex items-baseline justify-between mb-0.5 gap-3">
+    {% with session_id=session.id, path="experience." ~ exp_idx ~ ".title", value=loop_exp.title, kind="text", display_class="font-semibold text-gray-900" %}
+      {% include "tailor/_resume_field.html" %}
+    {% endwith %}
+    {% with session_id=session.id, path="experience." ~ exp_idx ~ ".dates", value=loop_exp.dates, kind="text", display_class="text-sm text-gray-400" %}
+      {% include "tailor/_resume_field.html" %}
+    {% endwith %}
   </div>
-  <div class="text-sm text-gray-500 mb-2">{{ loop_exp.company }}</div>
-  <ul class="space-y-1">
-    {% for bullet in loop_exp.bullets %}
-    <li class="text-sm text-gray-700 flex gap-2">
-      <span class="text-gray-300 shrink-0 mt-0.5">•</span>
-      <span>{{ bullet }}</span>
-    </li>
-    {% endfor %}
-  </ul>
+  <div class="text-sm text-gray-500 mb-2">
+    {% with session_id=session.id, path="experience." ~ exp_idx ~ ".company", value=loop_exp.company, kind="text", display_class="text-sm text-gray-500" %}
+      {% include "tailor/_resume_field.html" %}
+    {% endwith %}
+  </div>
+  {% with session_id=session.id, exp_index=exp_idx, bullets=loop_exp.bullets %}
+    {% include "tailor/_resume_bullets_list.html" %}
+  {% endwith %}
 </div>

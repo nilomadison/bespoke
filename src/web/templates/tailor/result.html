@@ -19,10 +19,14 @@
       </a>
       <form method="post" action="/tailor/{{ session.id }}/export">
         <button type="submit"
-                class="px-5 py-2 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700">
+                class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700">
           Export .docx
         </button>
       </form>
+      <a href="/tailor/{{ session.id }}/export.pdf"
+         class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700">
+        Export .pdf
+      </a>
       {% endif %}
     </div>
   </div>
@@ -41,30 +45,39 @@
     <p class="text-xs text-gray-300 mt-1">This takes 15–45 seconds depending on the model.</p>
   </div>
 
+  {% elif session.error_message and not session.generated_json %}
+  {% with stage="generation" %}{% include "tailor/_status_error.html" %}{% endwith %}
+
   {% elif session.generated_json %}
   {% set r = session.generated_json %}
+  <p class="text-xs text-gray-400 mb-3">Hover any field to edit. Changes save directly without re-running the LLM.</p>
   <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-8 space-y-7" id="resume-preview">
 
-    {% if r.summary %}
     <section>
       <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Summary</h2>
-      <p class="text-gray-800 leading-relaxed">{{ r.summary }}</p>
+      <p class="leading-relaxed">
+        {% with session_id=session.id, path="summary", value=r.summary or "", kind="textarea", display_class="text-gray-800", placeholder="Add a summary…" %}
+          {% include "tailor/_resume_field.html" %}
+        {% endwith %}
+      </p>
     </section>
-    {% endif %}
 
-    {% if r.skills %}
     <section>
       <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Skills</h2>
-      <p class="text-gray-700">{{ r.skills }}</p>
+      <p>
+        {% with session_id=session.id, path="skills", value=r.skills or "", kind="textarea", display_class="text-gray-700", placeholder="Add skills…" %}
+          {% include "tailor/_resume_field.html" %}
+        {% endwith %}
+      </p>
     </section>
-    {% endif %}
 
     {% if r.experience %}
     <section>
       <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Experience</h2>
       {% for exp in r.experience %}
-      {% set loop_exp = exp %}
-      {% include "tailor/_resume_section.html" %}
+        {% with loop_exp=exp, exp_idx=loop.index0 %}
+          {% include "tailor/_resume_section.html" %}
+        {% endwith %}
       {% endfor %}
     </section>
     {% endif %}
@@ -74,10 +87,13 @@
       <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Projects</h2>
       {% for proj in r.projects %}
       <div class="mb-3">
-        <span class="font-semibold text-gray-900">{{ proj.name }}</span>
-        {% if proj.description %}
-        <span class="text-gray-700"> — {{ proj.description }}</span>
-        {% endif %}
+        {% with session_id=session.id, path="projects." ~ loop.index0 ~ ".name", value=proj.name or "", kind="text", display_class="font-semibold text-gray-900" %}
+          {% include "tailor/_resume_field.html" %}
+        {% endwith %}
+        <span class="text-gray-700"> — </span>
+        {% with session_id=session.id, path="projects." ~ loop.index0 ~ ".description", value=proj.description or "", kind="textarea", display_class="text-gray-700", placeholder="Add description…" %}
+          {% include "tailor/_resume_field.html" %}
+        {% endwith %}
       </div>
       {% endfor %}
     </section>
@@ -87,12 +103,17 @@
     <section>
       <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Education</h2>
       {% for edu in r.education %}
-      <div class="mb-2 flex items-baseline gap-2">
-        <span class="font-semibold text-gray-900">{{ edu.degree }}</span>
-        <span class="text-gray-500">— {{ edu.institution }}</span>
-        {% if edu.dates %}
-        <span class="text-gray-400 text-sm">{{ edu.dates }}</span>
-        {% endif %}
+      <div class="mb-2 flex items-baseline gap-2 flex-wrap">
+        {% with session_id=session.id, path="education." ~ loop.index0 ~ ".degree", value=edu.degree or "", kind="text", display_class="font-semibold text-gray-900" %}
+          {% include "tailor/_resume_field.html" %}
+        {% endwith %}
+        <span class="text-gray-500">—</span>
+        {% with session_id=session.id, path="education." ~ loop.index0 ~ ".institution", value=edu.institution or "", kind="text", display_class="text-gray-500" %}
+          {% include "tailor/_resume_field.html" %}
+        {% endwith %}
+        {% with session_id=session.id, path="education." ~ loop.index0 ~ ".dates", value=edu.dates or "", kind="text", display_class="text-gray-400 text-sm" %}
+          {% include "tailor/_resume_field.html" %}
+        {% endwith %}
       </div>
       {% endfor %}
     </section>
@@ -102,12 +123,17 @@
     <section>
       <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Certifications</h2>
       {% for cert in r.certifications %}
-      <div class="mb-2 flex items-baseline gap-2">
-        <span class="font-semibold text-gray-900">{{ cert.name }}</span>
-        <span class="text-gray-500">— {{ cert.issuer }}</span>
-        {% if cert.year %}
-        <span class="text-gray-400 text-sm">{{ cert.year }}</span>
-        {% endif %}
+      <div class="mb-2 flex items-baseline gap-2 flex-wrap">
+        {% with session_id=session.id, path="certifications." ~ loop.index0 ~ ".name", value=cert.name or "", kind="text", display_class="font-semibold text-gray-900" %}
+          {% include "tailor/_resume_field.html" %}
+        {% endwith %}
+        <span class="text-gray-500">—</span>
+        {% with session_id=session.id, path="certifications." ~ loop.index0 ~ ".issuer", value=cert.issuer or "", kind="text", display_class="text-gray-500" %}
+          {% include "tailor/_resume_field.html" %}
+        {% endwith %}
+        {% with session_id=session.id, path="certifications." ~ loop.index0 ~ ".year", value=cert.year or "", kind="text", display_class="text-gray-400 text-sm" %}
+          {% include "tailor/_resume_field.html" %}
+        {% endwith %}
       </div>
       {% endfor %}
     </section>

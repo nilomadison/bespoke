@@ -1,0 +1,174 @@
+<div id="add-item-panel"
+     class="rounded-lg border border-gray-200 bg-white p-4 mb-4 shadow-sm">
+  <div class="flex items-center justify-between mb-3">
+    <h3 class="text-sm font-semibold text-gray-700">Add an item the LLM missed</h3>
+    <button type="button"
+            class="text-xs text-gray-400 hover:text-gray-600"
+            onclick="this.closest('#add-item-panel').innerHTML = ''">
+      Close
+    </button>
+  </div>
+
+  <div class="space-y-4">
+
+    {% if achievements %}
+    <details open class="border-t border-gray-100 pt-3">
+      <summary class="cursor-pointer text-xs font-semibold uppercase tracking-wide text-indigo-600">
+        Achievements ({{ achievements | length }})
+      </summary>
+      <ul class="mt-2 space-y-1">
+        {% for a in achievements %}
+        <li class="flex items-start gap-2 py-1">
+          <form method="post" action="/tailor/{{ session_id }}/plan/add"
+                hx-post="/tailor/{{ session_id }}/plan/add"
+                class="shrink-0">
+            <input type="hidden" name="item_type" value="achievement">
+            <input type="hidden" name="reference_id" value="{{ a.id }}">
+            <button type="submit"
+                    class="text-xs px-2 py-0.5 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+              Add
+            </button>
+          </form>
+          <span class="text-sm text-gray-700 flex-1">{{ a.text }}{% if a.metric %} <span class="text-gray-400">({{ a.metric }})</span>{% endif %}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </details>
+    {% endif %}
+
+    {% if projects %}
+    <details class="border-t border-gray-100 pt-3">
+      <summary class="cursor-pointer text-xs font-semibold uppercase tracking-wide text-violet-600">
+        Projects ({{ projects | length }})
+      </summary>
+      <ul class="mt-2 space-y-1">
+        {% for p in projects %}
+        <li class="flex items-start gap-2 py-1">
+          <form method="post" action="/tailor/{{ session_id }}/plan/add"
+                hx-post="/tailor/{{ session_id }}/plan/add"
+                class="shrink-0">
+            <input type="hidden" name="item_type" value="project">
+            <input type="hidden" name="reference_id" value="{{ p.id }}">
+            <button type="submit"
+                    class="text-xs px-2 py-0.5 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+              Add
+            </button>
+          </form>
+          <span class="text-sm text-gray-700 flex-1">
+            <span class="font-semibold">{{ p.name }}</span>
+            {% if p.summary %} — <span class="text-gray-500">{{ p.summary }}</span>{% endif %}
+          </span>
+        </li>
+        {% endfor %}
+      </ul>
+    </details>
+    {% endif %}
+
+    {% if jobs %}
+    <details class="border-t border-gray-100 pt-3">
+      <summary class="cursor-pointer text-xs font-semibold uppercase tracking-wide text-emerald-600">
+        Jobs ({{ jobs | length }})
+      </summary>
+      <ul class="mt-2 space-y-1">
+        {% for j in jobs %}
+        <li class="flex items-start gap-2 py-1">
+          <form method="post" action="/tailor/{{ session_id }}/plan/add"
+                hx-post="/tailor/{{ session_id }}/plan/add"
+                class="shrink-0">
+            <input type="hidden" name="item_type" value="job">
+            <input type="hidden" name="reference_id" value="{{ j.id }}">
+            <button type="submit"
+                    class="text-xs px-2 py-0.5 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+              Add
+            </button>
+          </form>
+          <span class="text-sm text-gray-700 flex-1">{{ j.title }} at {{ j.company }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </details>
+    {% endif %}
+
+    {% if educations %}
+    <details class="border-t border-gray-100 pt-3">
+      <summary class="cursor-pointer text-xs font-semibold uppercase tracking-wide text-sky-600">
+        Education ({{ educations | length }})
+      </summary>
+      <ul class="mt-2 space-y-1">
+        {% for e in educations %}
+        <li class="flex items-start gap-2 py-1">
+          <form method="post" action="/tailor/{{ session_id }}/plan/add"
+                hx-post="/tailor/{{ session_id }}/plan/add"
+                class="shrink-0">
+            <input type="hidden" name="item_type" value="education">
+            <input type="hidden" name="reference_id" value="{{ e.id }}">
+            <button type="submit"
+                    class="text-xs px-2 py-0.5 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+              Add
+            </button>
+          </form>
+          <span class="text-sm text-gray-700 flex-1">{{ e.degree }} — {{ e.institution }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </details>
+    {% endif %}
+
+    {% if certifications %}
+    <details class="border-t border-gray-100 pt-3">
+      <summary class="cursor-pointer text-xs font-semibold uppercase tracking-wide text-gray-500">
+        Certifications ({{ certifications | length }})
+      </summary>
+      <ul class="mt-2 space-y-1">
+        {% for c in certifications %}
+        <li class="flex items-start gap-2 py-1">
+          <form method="post" action="/tailor/{{ session_id }}/plan/add"
+                hx-post="/tailor/{{ session_id }}/plan/add"
+                class="shrink-0">
+            <input type="hidden" name="item_type" value="certification">
+            <input type="hidden" name="reference_id" value="{{ c.id }}">
+            <button type="submit"
+                    class="text-xs px-2 py-0.5 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+              Add
+            </button>
+          </form>
+          <span class="text-sm text-gray-700 flex-1">{{ c.name }} ({{ c.issuer }})</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </details>
+    {% endif %}
+
+    <details class="border-t border-gray-100 pt-3">
+      <summary class="cursor-pointer text-xs font-semibold uppercase tracking-wide text-amber-600">
+        Skill emphasis
+      </summary>
+      <p class="text-xs text-gray-500 mt-2 mb-2">
+        Add a skill group with the skill name(s) you want to emphasize. Comma-separate multiple.
+      </p>
+      <form method="post" action="/tailor/{{ session_id }}/plan/add"
+            hx-post="/tailor/{{ session_id }}/plan/add"
+            class="flex gap-2">
+        <input type="hidden" name="item_type" value="skill_group">
+        <input type="text" name="emphasis_note"
+               placeholder="e.g. Kubernetes, Terraform"
+               class="flex-1 text-sm rounded border border-gray-300 px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+               list="skill-suggestions">
+        <datalist id="skill-suggestions">
+          {% for s in skills %}<option value="{{ s.name }}">{% endfor %}
+        </datalist>
+        <button type="submit"
+                class="text-sm px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+          Add
+        </button>
+      </form>
+    </details>
+
+    {% if not (achievements or projects or jobs or educations or certifications) %}
+    <p class="text-sm text-gray-400 text-center py-4">
+      All career items are already on the plan. You can still add a skill emphasis above.
+    </p>
+    {% endif %}
+
+  </div>
+</div>

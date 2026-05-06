@@ -1,0 +1,41 @@
+{# Single editable bullet.
+   Vars: session_id, exp_index, bullet_index, value. #}
+{% set field_id = "rb-" ~ exp_index ~ "-" ~ bullet_index %}
+<li id="{{ field_id }}"
+    class="result-bullet group flex items-start gap-2 text-sm text-gray-700">
+  <span class="text-gray-300 shrink-0 mt-0.5">•</span>
+  <span class="result-bullet-display flex-1 cursor-text"
+        onclick="this.closest('.result-bullet').querySelector('.result-bullet-display').classList.add('hidden'); this.closest('.result-bullet').querySelector('.result-bullet-edit').classList.remove('hidden'); this.closest('.result-bullet').querySelector('textarea').focus();">
+    {{ value }}
+    <span class="opacity-0 group-hover:opacity-60 ml-1 text-xs text-indigo-500">✎</span>
+  </span>
+  <form class="result-bullet-edit hidden flex-1 flex flex-col gap-1"
+        hx-post="/tailor/{{ session_id }}/result/field"
+        hx-target="#{{ field_id }}"
+        hx-swap="outerHTML">
+    <input type="hidden" name="path" value="experience.{{ exp_index }}.bullets.{{ bullet_index }}">
+    <textarea name="value" rows="2"
+              class="text-sm rounded border border-indigo-300 px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-400">{{ value }}</textarea>
+    <div class="flex items-center gap-2">
+      <button type="submit"
+              class="text-xs px-2 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+        Save
+      </button>
+      <button type="button"
+              class="text-xs px-2 py-1 text-gray-500 hover:text-gray-700"
+              onclick="const b = this.closest('.result-bullet'); b.querySelector('.result-bullet-display').classList.remove('hidden'); b.querySelector('.result-bullet-edit').classList.add('hidden');">
+        Cancel
+      </button>
+    </div>
+  </form>
+  <button type="button"
+          class="opacity-0 group-hover:opacity-60 text-xs text-red-500 hover:text-red-700 shrink-0"
+          title="Delete bullet"
+          hx-post="/tailor/{{ session_id }}/result/bullet/delete"
+          hx-vals='{"experience_index": "{{ exp_index }}", "bullet_index": "{{ bullet_index }}"}'
+          hx-target="#exp-bullets-{{ exp_index }}"
+          hx-swap="outerHTML"
+          hx-confirm="Delete this bullet?">
+    ×
+  </button>
+</li>

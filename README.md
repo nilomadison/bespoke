@@ -6,8 +6,8 @@ A local-first resume tailoring tool that treats your career history as a structu
 
 1. **Enter your career data once** — jobs, achievements, skills, projects, education.
 2. **Paste a job description** — the analyzer extracts required/preferred skills, role level, tone signals, and emphasis guidance.
-3. **Review the tailoring plan** — a second LLM pass selects which achievements to include, with rationale for each decision. Toggle items on/off, add emphasis notes.
-4. **Generate and export** — a third LLM pass writes polished resume prose. Export to `.docx` for Word/Pages.
+3. **Review the tailoring plan** — a second LLM pass selects which achievements to include, with rationale for each decision. Toggle items on/off, add emphasis notes, drag to reorder, or add items the LLM missed.
+4. **Generate, polish, and export** — a third LLM pass writes resume prose. Edit any field or bullet inline on the result page (no LLM re-run). Export to `.docx` or `.pdf`.
 5. **Optionally generate a cover letter** — grounded in the same plan items as the resume.
 
 All LLM outputs are versioned by prompt hash (`sha256[:12]`) and stored in SQLite for later comparison.
@@ -44,7 +44,7 @@ Run the app:
 uvicorn src.web.app:app --reload
 ```
 
-Open [http://localhost:8000](http://localhost:8000). Navigate to **Tailor → New session**, paste a job description, and go.
+Open [http://localhost:8000](http://localhost:8000). The home dashboard shows recent sessions and a **Start a new tailoring** button — paste a job description and go.
 
 ## Development
 
@@ -76,7 +76,7 @@ src/
 ├── db/             Engine, session factory, init, seed CLI
 ├── llm/            OpenRouter client, mock client, prompt loader
 ├── tailor/         analyzer, planner, generator, cover_letter, resolver, scorer
-├── render/         python-docx renderer
+├── render/         python-docx + reportlab renderers (.docx and .pdf)
 ├── web/
 │   ├── routes/     FastAPI route handlers (one file per entity)
 │   └── templates/  Jinja2 + HTMX + Tailwind templates

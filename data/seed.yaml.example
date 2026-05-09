@@ -58,6 +58,11 @@ jobs:
       - text: "Mentored 3 junior engineers; two were promoted within 12 months"
         impact_tags: [leadership, mentorship]
         prominence: 3
+    skills:
+      - { name: Python, proficiency: "advanced", years_used: 4 }
+      - { name: PostgreSQL, proficiency: "advanced", years_used: 4 }
+      - { name: Kubernetes, proficiency: "intermediate", years_used: 2 }
+      - { name: AWS, proficiency: "intermediate", years_used: 3 }
 
   - title: "Software Engineer"
     company: "StartupXYZ"
@@ -76,16 +81,34 @@ jobs:
         metric: "Reduced average deploy time from 45 minutes to 8 minutes"
         impact_tags: [devops, scale, architecture]
         prominence: 5
+    skills:
+      - { name: Python, proficiency: "intermediate", years_used: 3 }
+      - { name: TypeScript, proficiency: "intermediate", years_used: 2 }
+      - { name: Docker, proficiency: "intermediate", years_used: 3 }
 
 education:
   - institution: "University of California, Berkeley"
     degree: "B.S."
     field: "Computer Science"
+    location: "Berkeley, CA"
     start_date: "2014-08-01"
     end_date: "2018-05-15"
     is_in_progress: false
     gpa: 3.8
     honors: "Magna Cum Laude"
+
+  # In-progress degree: leave end_date null, set is_in_progress: true,
+  # and set expected_end_date to your projected graduation.
+  - institution: "Some University"
+    degree: "M.S."
+    field: "Computer Science"
+    location: "Online"
+    start_date: "2024-09-01"
+    end_date: null
+    expected_end_date: "2026-06-01"
+    is_in_progress: true
+    gpa: null
+    honors: null
 
 certifications:
   - name: "AWS Certified Solutions Architect – Associate"
@@ -94,6 +117,7 @@ certifications:
     expiry_date: "2025-06-01"
     credential_id: "ABC123"
     credential_url: ""
+    notes: "Earned during the platform migration; covers SAA-C03 exam scope."
 
 projects:
   - name: "Bespoke"
@@ -108,3 +132,19 @@ projects:
     end_date: null
     is_active: true
     prominence: 5
+
+  # Optional: pin a project to a specific job by (company, title). The job
+  # must exist in the `jobs:` section above. Useful when a project shipped
+  # under a particular role.
+  - name: "Internal Feature Flag Service"
+    summary: "Flag-as-a-service used by all product teams"
+    description: >
+      Internal Python/FastAPI service for runtime feature flags, used to coordinate
+      A/B tests across product teams. See achievement under Acme Corp.
+    repo_url: ""
+    live_url: ""
+    start_date: "2022-04-01"
+    end_date: null
+    is_active: true
+    prominence: 4
+    job: { company: "Acme Corp", title: "Senior Software Engineer" }

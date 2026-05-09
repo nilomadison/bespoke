@@ -36,6 +36,7 @@ Initialize the database and seed your career data:
 cp data/seed.yaml.example data/seed.yaml
 # Edit data/seed.yaml with your real career history
 python -m src.db.seed
+alembic stamp head
 ```
 
 Run the app:
@@ -63,10 +64,20 @@ pytest
 **Database migrations** (Alembic, SQLite):
 
 ```bash
-alembic upgrade head       # apply all migrations
+alembic upgrade head       # apply new migrations to an existing db
 alembic history            # see migration history
 alembic current            # check current revision
 ```
+
+**Wipe and reseed** (fresh start):
+
+```bash
+rm data/bespoke.db
+python -m src.db.seed
+alembic stamp head
+```
+
+> `alembic upgrade head` alone will fail on a blank database — the baseline migration is a no-op stub that assumes tables already exist. `python -m src.db.seed` builds the schema via `create_all()`, and `alembic stamp head` syncs the version table without re-running migrations.
 
 ## Project structure
 

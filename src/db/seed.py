@@ -68,6 +68,7 @@ def seed(seed_file: Path) -> None:
 
         # Jobs + achievements (clear and re-insert by title+company)
         job_map: dict[tuple[str, str], Job] = {}
+        js_total = 0
         for j in data.get("jobs", []):
             existing_job = (
                 db.query(Job)
@@ -114,25 +115,13 @@ def seed(seed_file: Path) -> None:
                     prominence=ach.get("prominence", 3),
                     sort_order=idx,
                 ))
-            db.commit()
-            job_map[(j["company"], j["title"])] = job
-        print(f"  {len(data.get('jobs', []))} jobs seeded.")
-
-        # JobSkills (clear and re-insert per job)
-        js_group_count = 0
-        for js_entry in data.get("job_skills", []):
-            job_key = (js_entry["job"]["company"], js_entry["job"]["title"])
-            job = job_map.get(job_key)
-            if not job:
-                print(f"  WARNING: job not found for job_skills entry: {job_key}")
-                continue
             for existing in list(job.job_skills):
                 db.delete(existing)
             db.flush()
-            for sk in js_entry.get("skills", []):
+            for sk in j.get("skills", []):
                 skill = skill_map.get(sk["name"])
                 if not skill:
-                    print(f"  WARNING: skill not found: {sk['name']}")
+                    print(f"  WARNING: skill '{sk['name']}' not found for {j['company']}/{j['title']}")
                     continue
                 db.add(JobSkill(
                     job_id=job.id,
@@ -140,9 +129,10 @@ def seed(seed_file: Path) -> None:
                     proficiency=sk.get("proficiency"),
                     years_used=sk.get("years_used"),
                 ))
+                js_total += 1
             db.commit()
-            js_group_count += 1
-        print(f"  {js_group_count} job_skill groups seeded.")
+            job_map[(j["company"], j["title"])] = job
+        print(f"  {len(data.get('jobs', []))} jobs seeded ({js_total} job_skill rows).")
 
         # Education
         for e in data.get("education", []):
@@ -180,6 +170,7 @@ def seed(seed_file: Path) -> None:
             cert.expiry_date = _date(c.get("expiry_date"))
             cert.credential_id = c.get("credential_id")
             cert.credential_url = c.get("credential_url")
+            cert.notes = c.get("notes")
         db.commit()
         print(f"  {len(data.get('certifications', []))} certifications seeded.")
 
@@ -199,6 +190,21 @@ def seed(seed_file: Path) -> None:
             p.end_date = _date(proj.get("end_date"))
             p.is_active = proj.get("is_active", False)
             p.prominence = proj.get("prominence", 3)
+            # Optional `job:` reference links the project to a specific job by
+            # (company, title). If the lookup misses, leave job_id null and warn.
+            job_ref = proj.get("job")
+            if job_ref:
+                linked = job_map.get((job_ref.get("company"), job_ref.get("title")))
+                if linked:
+                    p.job_id = linked.id
+                else:
+                    print(
+                        f"  WARNING: project '{proj['name']}' references unknown "
+                        f"job: {job_ref}"
+                    )
+                    p.job_id = None
+            else:
+                p.job_id = None
         db.commit()
         print(f"  {len(data.get('projects', []))} projects seeded.")
 

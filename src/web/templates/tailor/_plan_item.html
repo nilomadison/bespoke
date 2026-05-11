@@ -41,8 +41,8 @@
                      {% else %}text-gray-500{% endif %}">
           {{ item.item_type.value.replace("_", " ") }}
         </span>
-        {% if item.reference_id %}
-        <span class="text-xs text-gray-400 font-mono">id:{{ item.reference_id }}</span>
+        {% if label %}
+        <span class="text-xs text-gray-600 truncate max-w-xs">{{ label }}</span>
         {% endif %}
         {% if not item.include %}
         <span class="text-xs text-gray-400 italic">excluded</span>

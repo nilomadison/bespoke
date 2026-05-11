@@ -55,20 +55,20 @@
 
     <section>
       <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Summary</h2>
-      <p class="leading-relaxed">
+      <div class="leading-relaxed">
         {% with session_id=session.id, path="summary", value=r.summary or "", kind="textarea", display_class="text-gray-800", placeholder="Add a summary…" %}
           {% include "tailor/_resume_field.html" %}
         {% endwith %}
-      </p>
+      </div>
     </section>
 
     <section>
       <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Skills</h2>
-      <p>
+      <div>
         {% with session_id=session.id, path="skills", value=r.skills or "", kind="textarea", display_class="text-gray-700", placeholder="Add skills…" %}
           {% include "tailor/_resume_field.html" %}
         {% endwith %}
-      </p>
+      </div>
     </section>
 
     {% if r.experience %}
@@ -91,7 +91,7 @@
           {% include "tailor/_resume_field.html" %}
         {% endwith %}
         <span class="text-gray-700"> — </span>
-        {% with session_id=session.id, path="projects." ~ loop.index0 ~ ".description", value=proj.description or "", kind="textarea", display_class="text-gray-700", placeholder="Add description…" %}
+        {% with session_id=session.id, path="projects." ~ loop.index0 ~ ".description", value=proj.description or "", kind="textarea", display_class="text-gray-700", placeholder="Add description…", textarea_rows=6 %}
           {% include "tailor/_resume_field.html" %}
         {% endwith %}
       </div>

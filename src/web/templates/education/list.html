@@ -30,7 +30,7 @@
                  class="w-full rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
         </div>
       </div>
-      <div class="grid grid-cols-4 gap-3 items-end">
+      <div class="grid grid-cols-3 gap-3 items-end">
         <div>
           <label class="block text-xs font-medium text-gray-600 mb-1">Start</label>
           <input type="date" name="start_date"
@@ -46,11 +46,11 @@
           <input type="number" name="gpa" step="0.01" min="0" max="4"
                  class="w-full rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
         </div>
-        <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Honors</label>
-          <input type="text" name="honors" placeholder="Summa Cum Laude"
-                 class="w-full rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">Honors</label>
+        <textarea name="honors" rows="2" placeholder="Summa Cum Laude, Dean's List…"
+                  class="w-full rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"></textarea>
       </div>
       <button type="submit"
               class="px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded hover:bg-indigo-700">

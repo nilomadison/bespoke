@@ -5,20 +5,20 @@
          placeholder (optional). #}
 {% set field_id = "rf-" ~ path | replace(".", "-") %}
 <span id="{{ field_id }}"
-      class="result-field group relative inline-block align-baseline"
+      class="result-field group relative {% if kind == 'textarea' %}block w-full{% else %}inline-block align-baseline{% endif %}"
       data-path="{{ path }}">
   <span class="result-field-display {{ display_class | default('text-gray-800') }}"
         onclick="this.closest('.result-field').querySelector('.result-field-display').classList.add('hidden'); this.closest('.result-field').querySelector('.result-field-edit').classList.remove('hidden'); this.closest('.result-field').querySelector('.result-field-input').focus();">
     {% if value %}{{ value }}{% else %}<span class="text-gray-300 italic">{{ placeholder | default("(empty)") }}</span>{% endif %}
     <span class="opacity-0 group-hover:opacity-60 ml-1 text-xs text-indigo-500">✎</span>
   </span>
-  <form class="result-field-edit hidden inline-flex items-start gap-1 align-baseline w-full"
+  <form class="result-field-edit hidden {% if kind == 'textarea' %}flex{% else %}inline-flex{% endif %} items-start gap-1 align-baseline w-full"
         hx-post="/tailor/{{ session_id }}/result/field"
         hx-target="#{{ field_id }}"
         hx-swap="outerHTML">
     <input type="hidden" name="path" value="{{ path }}">
     {% if kind == "textarea" %}
-    <textarea name="value" rows="3"
+    <textarea name="value" rows="{{ textarea_rows | default(3) }}"
               class="result-field-input flex-1 text-sm rounded border border-indigo-300 px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-400">{{ value }}</textarea>
     {% else %}
     <input type="text" name="value" value="{{ value }}"

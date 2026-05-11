@@ -194,8 +194,9 @@ def view_plan(session_id: int, request: Request, db: Session = Depends(get_sessi
     if session is None:
         return HTMLResponse(content="Not found", status_code=404)
     score = compute_match_score(session.analysis_json, db) if session.analysis_json else None
+    labels = {item.id: _get_item_label(item, db) for item in session.plan_items}
     return templates.TemplateResponse(
-        request, "tailor/plan.html", {"session": session, "score": score}
+        request, "tailor/plan.html", {"session": session, "score": score, "labels": labels}
     )
 
 
@@ -216,7 +217,7 @@ def toggle_plan_item(
     db.commit()
     db.refresh(item)
     return templates.TemplateResponse(
-        request, "tailor/_plan_item.html", {"item": item, "session_id": session_id}
+        request, "tailor/_plan_item.html", {"item": item, "session_id": session_id, "label": _get_item_label(item, db)}
     )
 
 
@@ -238,7 +239,7 @@ def update_plan_item_note(
     db.commit()
     db.refresh(item)
     return templates.TemplateResponse(
-        request, "tailor/_plan_item.html", {"item": item, "session_id": session_id}
+        request, "tailor/_plan_item.html", {"item": item, "session_id": session_id, "label": _get_item_label(item, db)}
     )
 
 
@@ -539,6 +540,30 @@ def update_result_field(
             "display_class": display_class,
         },
     )
+
+
+def _get_item_label(item: PlanItem, db: Session) -> str | None:
+    if item.item_type == PlanItemType.JOB:
+        obj = db.get(Job, item.reference_id)
+        return f"{obj.title} at {obj.company}" if obj else None
+    if item.item_type == PlanItemType.ACHIEVEMENT:
+        obj = db.get(Achievement, item.reference_id)
+        if not obj:
+            return None
+        text = obj.text or ""
+        return text[:80] + ("…" if len(text) > 80 else "")
+    if item.item_type == PlanItemType.PROJECT:
+        obj = db.get(Project, item.reference_id)
+        return obj.name if obj else None
+    if item.item_type == PlanItemType.EDUCATION:
+        obj = db.get(Education, item.reference_id)
+        return f"{obj.degree} — {obj.institution}" if obj else None
+    if item.item_type == PlanItemType.CERTIFICATION:
+        obj = db.get(Certification, item.reference_id)
+        return obj.name if obj else None
+    if item.item_type == PlanItemType.SKILL_GROUP:
+        return item.emphasis_note or "skill group"
+    return None
 
 
 def _display_class_for_path(path: str) -> str:

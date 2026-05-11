@@ -51,7 +51,9 @@
 
       <div id="plan-item-list" class="space-y-2">
         {% for item in session.plan_items %}
-          {% include "tailor/_plan_item.html" %}
+          {% with label=labels.get(item.id), session_id=session.id %}
+            {% include "tailor/_plan_item.html" %}
+          {% endwith %}
         {% endfor %}
       </div>
 

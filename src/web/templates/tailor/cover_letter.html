@@ -13,7 +13,8 @@
         ← Resume
       </a>
       {% if session.cover_letter_json %}
-      <form method="post" action="/tailor/{{ session.id }}/cover-letter">
+      <form method="post" action="/tailor/{{ session.id }}/cover-letter"
+            onsubmit="this.querySelector('button').disabled = true">
         <button type="submit"
                 class="px-4 py-2 text-sm text-indigo-600 border border-indigo-300 rounded hover:bg-indigo-50">
           Regenerate
@@ -25,6 +26,9 @@
 
   {% if session.cover_letter_generating and not session.cover_letter_json %}
   {% include "tailor/_cover_letter_spinner.html" %}
+
+  {% elif session.error_message and not session.cover_letter_json and session.generated_json %}
+  {% include "tailor/_cover_letter_error.html" %}
 
   {% elif session.cover_letter_json %}
   {% set cl = session.cover_letter_json %}
@@ -48,7 +52,8 @@
   <div class="text-center py-20 text-gray-400">
     <p class="mb-4">No cover letter generated yet.</p>
     {% if session.generated_json %}
-    <form method="post" action="/tailor/{{ session.id }}/cover-letter">
+    <form method="post" action="/tailor/{{ session.id }}/cover-letter"
+          onsubmit="this.querySelector('button').disabled = true">
       <button type="submit"
               class="px-5 py-2 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700">
         Generate cover letter

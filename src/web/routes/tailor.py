@@ -416,6 +416,9 @@ def start_generation(
     session = db.get(TailoringSession, session_id)
     if session is None:
         return HTMLResponse(content="Not found", status_code=404)
+    if session.status == TailoringStatus.GENERATING:
+        # Double-click guard: a generation task is already in flight
+        return RedirectResponse(url=f"/tailor/{session_id}/result", status_code=303)
     session.status = TailoringStatus.GENERATING
     session.error_message = None
     db.commit()
@@ -436,6 +439,7 @@ def retry_analysis(
         db.delete(item)
     session.analysis_json = None
     session.analysis_prompt_version = None
+    session.plan_prompt_version = None
     session.error_message = None
     session.status = TailoringStatus.ANALYZING
     db.commit()
@@ -782,8 +786,13 @@ def start_cover_letter(
         return HTMLResponse(content="Not found", status_code=404)
     if not session.generated_json:
         return HTMLResponse(content="Generate the resume first", status_code=400)
+    if session.cover_letter_generating:
+        # Double-click guard: a cover-letter task is already in flight
+        return RedirectResponse(url=f"/tailor/{session_id}/cover-letter", status_code=303)
     session.cover_letter_generating = True
     session.cover_letter_json = None
+    session.cover_letter_prompt_version = None
+    session.error_message = None
     db.commit()
     background_tasks.add_task(_run_cover_letter_sync, session_id)
     return RedirectResponse(url=f"/tailor/{session_id}/cover-letter", status_code=303)
@@ -804,6 +813,16 @@ def cover_letter_status(session_id: int, request: Request, db: Session = Depends
     if session is None:
         return HTMLResponse(content="Not found", status_code=404)
     if session.cover_letter_json:
+        return HTMLResponse(
+            content="",
+            headers={"HX-Redirect": f"/tailor/{session_id}/cover-letter"},
+        )
+    if not session.cover_letter_generating:
+        if session.error_message:
+            return templates.TemplateResponse(
+                request, "tailor/_cover_letter_error.html", {"session": session}
+            )
+        # Not generating, no result, no error — stop polling rather than spin forever
         return HTMLResponse(
             content="",
             headers={"HX-Redirect": f"/tailor/{session_id}/cover-letter"},

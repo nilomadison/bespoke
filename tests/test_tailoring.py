@@ -338,6 +338,19 @@ def test_generate_404_for_missing_session(client):
     assert resp.status_code == 404
 
 
+def test_generate_idempotent_while_generating(client, db_session, monkeypatch):
+    calls = []
+    monkeypatch.setattr("src.web.routes.tailor._run_generation_sync", lambda sid: calls.append(sid))
+    s = make_session(db_session)
+
+    client.post(f"/tailor/{s.id}/generate", follow_redirects=False)
+    resp = client.post(f"/tailor/{s.id}/generate", follow_redirects=False)
+
+    assert resp.status_code == 303
+    assert "/result" in resp.headers["location"]
+    assert len(calls) == 1
+
+
 def test_status_redirects_to_result_when_generated(client, db_session):
     s = make_session(db_session, status=TailoringStatus.GENERATED)
     resp = client.get(f"/tailor/{s.id}/status", follow_redirects=False)
@@ -502,11 +515,29 @@ def test_start_cover_letter_sets_generating_flag(client, db_session):
 def test_start_cover_letter_clears_existing_json(client, db_session):
     s = make_generated_session(db_session)
     s.cover_letter_json = {"salutation": "old", "paragraphs": [], "closing": "old"}
+    s.cover_letter_prompt_version = "abc123def456"
+    s.error_message = "old failure"
     db_session.commit()
 
     client.post(f"/tailor/{s.id}/cover-letter", follow_redirects=False)
     db_session.refresh(s)
     assert s.cover_letter_json is None
+    assert s.cover_letter_prompt_version is None
+    assert s.error_message is None
+
+
+def test_start_cover_letter_idempotent_while_generating(client, db_session, monkeypatch):
+    calls = []
+    monkeypatch.setattr(
+        "src.web.routes.tailor._run_cover_letter_sync", lambda sid: calls.append(sid)
+    )
+    s = make_generated_session(db_session)
+
+    client.post(f"/tailor/{s.id}/cover-letter", follow_redirects=False)
+    resp = client.post(f"/tailor/{s.id}/cover-letter", follow_redirects=False)
+
+    assert resp.status_code == 303
+    assert len(calls) == 1
 
 
 def test_start_cover_letter_400_without_generated_json(client, db_session):
@@ -593,6 +624,42 @@ def test_cover_letter_status_404_for_missing(client):
     assert resp.status_code == 404
 
 
+def test_cover_letter_status_shows_error_on_failure(client, db_session):
+    s = make_generated_session(db_session)
+    s.cover_letter_generating = False
+    s.error_message = "LLM exploded"
+    db_session.commit()
+
+    resp = client.get(f"/tailor/{s.id}/cover-letter/status", follow_redirects=False)
+    assert resp.status_code == 200
+    assert "HX-Redirect" not in resp.headers
+    assert b"Cover letter generation failed" in resp.content
+    assert b"LLM exploded" in resp.content
+    # The error partial keeps the swap target id so HTMX replaces the spinner in place
+    assert b'id="cover-letter-status"' in resp.content
+
+
+def test_cover_letter_status_redirects_when_idle_no_error(client, db_session):
+    # Safety net: not generating, no result, no error — stop polling, don't spin forever
+    s = make_generated_session(db_session)
+    resp = client.get(f"/tailor/{s.id}/cover-letter/status", follow_redirects=False)
+    assert resp.status_code == 200
+    assert resp.headers.get("HX-Redirect") == f"/tailor/{s.id}/cover-letter"
+
+
+def test_view_cover_letter_shows_error_with_retry(client, db_session):
+    s = make_generated_session(db_session)
+    s.cover_letter_generating = False
+    s.error_message = "LLM exploded"
+    db_session.commit()
+
+    resp = client.get(f"/tailor/{s.id}/cover-letter")
+    assert resp.status_code == 200
+    assert b"Cover letter generation failed" in resp.content
+    assert b"LLM exploded" in resp.content
+    assert f'action="/tailor/{s.id}/cover-letter"'.encode() in resp.content
+
+
 # ---------------------------------------------------------------------------
 # Retry analysis / generation
 # ---------------------------------------------------------------------------
@@ -615,6 +682,7 @@ def test_retry_analysis_clears_plan_items_and_resets_status(client, db_session):
             "emphasis_guidance": "",
         },
         analysis_prompt_version="abc123",
+        plan_prompt_version="def456",
         error_message="LLM timeout",
     )
     db_session.add(s)
@@ -631,6 +699,7 @@ def test_retry_analysis_clears_plan_items_and_resets_status(client, db_session):
     assert s.status == TailoringStatus.ANALYZING
     assert s.analysis_json is None
     assert s.analysis_prompt_version is None
+    assert s.plan_prompt_version is None
     assert s.error_message is None
     assert len(s.plan_items) == 0
     # Crucially, the JD survives so the user doesn't lose their paste

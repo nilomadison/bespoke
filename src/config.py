@@ -15,7 +15,8 @@ class Settings:
     data_dir: str = field(default_factory=lambda: os.getenv("DATA_DIR", "data"))
     db_echo: bool = field(default_factory=lambda: os.getenv("DB_ECHO", "false").lower() == "true")
     mock_llm: bool = field(
-        default_factory=lambda: os.getenv("BESPOKE_MOCK_LLM", "false").lower() == "true"
+        default_factory=lambda: os.getenv("BESPOKE_MOCK_LLM", "").strip().lower()
+        in ("1", "true", "yes")
     )
     app_title: str = "Bespoke"
 

@@ -4,9 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}{{ app_title }}{% endblock %}</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tailwind Play CDN, version-pinned. It generates JS dynamically so SRI does not
+       apply; a compiled Tailwind build is the production path. Fine for a local-first tool. -->
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
   <script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js" integrity="sha384-BSxuMLxX+FCbTdYec3TbXlnMGEEM2QXTFdtDaveen71o+jswm2J36+xFqp8k4VHM" crossorigin="anonymous"></script>
 </head>
 <body class="h-full flex">
 

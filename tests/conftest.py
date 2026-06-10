@@ -42,9 +42,20 @@ def db_session(db_engine) -> Session:
 
 
 @pytest.fixture(scope="function")
-def client(db_session: Session) -> TestClient:
+def client(db_session: Session, monkeypatch) -> TestClient:
     def override_get_session():
         yield db_session
+
+    # TestClient executes BackgroundTasks after each response. The real task
+    # runners open src.db.engine.SessionLocal (the on-disk data/bespoke.db),
+    # so route tests must never run them — they'd leak outside the in-memory
+    # fixture db. Tests that assert on scheduling re-patch these themselves.
+    monkeypatch.setattr("src.web.routes.tailor._run_analysis_sync", lambda sid: None)
+    monkeypatch.setattr("src.web.routes.tailor._run_generation_sync", lambda sid: None)
+    monkeypatch.setattr("src.web.routes.tailor._run_cover_letter_sync", lambda sid: None)
+    # The app lifespan calls init_db() against the real on-disk engine; tests
+    # must not create or touch data/bespoke.db.
+    monkeypatch.setattr("src.web.app.init_db", lambda: None)
 
     app.dependency_overrides[get_session] = override_get_session
     with TestClient(app, raise_server_exceptions=True) as c:

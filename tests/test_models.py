@@ -16,12 +16,13 @@ def test_profile_seeded(db_session):
     assert profile.full_name == "Test User"
 
 
-def test_profile_is_singleton(db_session):
+def test_profile_is_singleton(db_engine, db_session):
     """init_db must not create a second profile row if one exists."""
     from src.db.init_db import init_db
 
-    # init_db should be idempotent
-    init_db()
+    # init_db should be idempotent — run it against the test engine, which
+    # the db_session fixture has already seeded with Profile(id=1)
+    init_db(bind=db_engine)
     count = db_session.query(Profile).count()
     assert count == 1
 

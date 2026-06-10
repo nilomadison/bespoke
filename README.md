@@ -32,7 +32,7 @@ All LLM outputs are versioned by prompt hash (`sha256[:12]`) and stored in SQLit
 **Prerequisites:** Python 3.11+, and an [OpenRouter](https://openrouter.ai) API key (create one at [openrouter.ai/keys](https://openrouter.ai/keys)) — or skip the key entirely and use mock mode (see [Development](#development)).
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/bespoke.git
+git clone https://github.com/nilomadison/bespoke.git
 cd bespoke
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"

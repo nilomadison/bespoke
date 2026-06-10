@@ -5,16 +5,18 @@ Usage:
     python -m src.tools.prompt_compare analyze <session_id_1> <session_id_2>
     python -m src.tools.prompt_compare plan    <session_id_1> <session_id_2>
     python -m src.tools.prompt_compare generate <session_id_1> <session_id_2>
+    python -m src.tools.prompt_compare cover_letter <session_id_1> <session_id_2>
 
-The DB already stores analysis_json, plan_items, and generated_json alongside the
-prompt version hash (sha256[:12]) that produced them. Use this tool to compare two
-sessions run with different prompt versions against the same job description.
+The DB already stores each stage's JSON output alongside the prompt version hash
+(sha256[:12]) that produced it. Use this tool to compare two sessions run with
+different prompt versions against the same job description.
 
 Each mode shows what's *meaningfully* different for that stage rather than a raw
 text diff:
-  analyze  — field-by-field comparison of the structured analysis JSON
-  plan     — which items were selected/dropped relative to each other
-  generate — summary text and bullet-by-bullet experience comparison
+  analyze      — field-by-field comparison of the structured analysis JSON
+  plan         — which items were selected/dropped relative to each other
+  generate     — summary text and bullet-by-bullet experience comparison
+  cover_letter — salutation, paragraph-by-paragraph body, and closing
 """
 
 import argparse
@@ -203,8 +205,8 @@ def cmd_plan(db, id1: int, id2: int) -> None:
     items2 = _load_plan_items(db, id2)
 
     _header(f"PLAN  session {id1} → session {id2}")
-    print(f"  Session {id1}: {len(items1)} items  (prompt {s1.analysis_prompt_version or '?'})")
-    print(f"  Session {id2}: {len(items2)} items  (prompt {s2.analysis_prompt_version or '?'})")
+    print(f"  Session {id1}: {len(items1)} items  (prompt {s1.plan_prompt_version or '?'})")
+    print(f"  Session {id2}: {len(items2)} items  (prompt {s2.plan_prompt_version or '?'})")
 
     keys1 = {_item_key(i): i for i in items1}
     keys2 = {_item_key(i): i for i in items2}
@@ -314,6 +316,41 @@ def cmd_generate(db, id1: int, id2: int) -> None:
 
 
 # ---------------------------------------------------------------------------
+# cover letter mode
+# ---------------------------------------------------------------------------
+
+
+def cmd_cover_letter(db, id1: int, id2: int) -> None:
+    s1, s2 = _load_session(db, id1), _load_session(db, id2)
+
+    _header(f"COVER LETTER  session {id1} → session {id2}")
+    print(f"  Session {id1}: prompt {s1.cover_letter_prompt_version or '(none)'}")
+    print(f"  Session {id2}: prompt {s2.cover_letter_prompt_version or '(none)'}")
+
+    c1 = s1.cover_letter_json or {}
+    c2 = s2.cover_letter_json or {}
+
+    if not c1 and not c2:
+        print("  Neither session has cover letter output.")
+        return
+
+    _header("Salutation")
+    _diff_text("salutation", c1.get("salutation", ""), c2.get("salutation", ""))
+
+    _header("Paragraphs")
+    _diff_text(
+        "paragraphs",
+        "\n\n".join(c1.get("paragraphs", [])),
+        "\n\n".join(c2.get("paragraphs", [])),
+    )
+
+    _header("Closing")
+    _diff_text("closing", c1.get("closing", ""), c2.get("closing", ""))
+
+    print()
+
+
+# ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 
@@ -328,7 +365,7 @@ def main() -> None:
 
     sub.add_parser("list", help="List all sessions")
 
-    for mode in ("analyze", "plan", "generate"):
+    for mode in ("analyze", "plan", "generate", "cover_letter"):
         sp = sub.add_parser(mode, help=f"Compare {mode} stage")
         sp.add_argument("session_a", type=int)
         sp.add_argument("session_b", type=int)
@@ -349,6 +386,8 @@ def main() -> None:
             cmd_plan(db, args.session_a, args.session_b)
         elif args.mode == "generate":
             cmd_generate(db, args.session_a, args.session_b)
+        elif args.mode == "cover_letter":
+            cmd_cover_letter(db, args.session_a, args.session_b)
     finally:
         db.close()
 

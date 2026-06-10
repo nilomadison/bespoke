@@ -7,12 +7,12 @@ from sqlalchemy.orm import Session, selectinload
 from src.llm.client import LLMClient
 from src.llm.mock_client import MockLLMClient
 from src.llm.parse import parse_llm_json
-from src.llm.prompt_loader import load_prompt
+from src.llm.prompt_loader import get_prompt_hash, load_prompt
 from src.models.education import Certification, Education
 from src.models.job import Job
 from src.models.project import Project
 from src.models.skill import Skill
-from src.models.tailoring import PlanItem, PlanItemType
+from src.models.tailoring import PlanItem, PlanItemType, TailoringSession
 from src.tailor.analyzer import JobAnalysis
 
 logger = logging.getLogger(__name__)
@@ -183,6 +183,10 @@ async def build_plan(
                 sort_order=idx,
             )
         )
+
+    session = db.get(TailoringSession, session_id)
+    if session is not None:
+        session.plan_prompt_version = get_prompt_hash("plan.system")
 
     db.add_all(items)
     db.commit()

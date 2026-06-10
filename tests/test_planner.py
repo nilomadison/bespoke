@@ -173,6 +173,18 @@ def test_build_plan_rationale_populated(db_session):
     assert len(rationales) > 0
 
 
+def test_build_plan_records_prompt_hash(db_session):
+    seed_career(db_session)
+    session = make_session(db_session)
+    client = MockLLMClient()
+
+    asyncio.run(build_plan(session.id, DUMMY_ANALYSIS, db_session, client))
+
+    db_session.refresh(session)
+    assert session.plan_prompt_version is not None
+    assert len(session.plan_prompt_version) == 12
+
+
 def test_build_plan_skips_unknown_types(db_session):
     session = make_session(db_session)
 

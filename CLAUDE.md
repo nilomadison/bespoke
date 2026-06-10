@@ -32,7 +32,7 @@ python -m src.db.seed
 rm data/bespoke.db && python -m src.db.seed && alembic stamp head
 
 # Compare two tailoring sessions (prompt A/B)
-python -m src.tools.prompt_compare {list|analyze|plan|generate} <id_a> <id_b>
+python -m src.tools.prompt_compare {list|analyze|plan|generate|cover_letter} <id_a> <id_b>
 ```
 
 ## Architecture
@@ -86,7 +86,7 @@ Any change to the generator, resolver, planner, or their prompts must keep these
 
 ## Discipline for prompt and schema changes
 
-- **Prompt edits.** When you change anything under `prompts/`, run two sessions over the same fixture JD (one before, one after) and use `python -m src.tools.prompt_compare {analyze|plan|generate} <id_before> <id_after>` to inspect the delta. Commit the prompt change only after reading that diff.
+- **Prompt edits.** When you change anything under `prompts/`, run two sessions over the same fixture JD (one before, one after) and use `python -m src.tools.prompt_compare {analyze|plan|generate|cover_letter} <id_before> <id_after>` to inspect the delta. Commit the prompt change only after reading that diff.
 - **Model edits.** Any change to `src/models/` requires a generated and committed Alembic migration in `alembic/versions/`. Don't ship a model change with "I'll do the migration later" — the next person to run `alembic upgrade head` will diverge.
 
 ## Conventions

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session, selectinload
 from src.llm.client import LLMClient
 from src.llm.mock_client import MockLLMClient
 from src.llm.parse import parse_llm_json
-from src.llm.prompt_loader import load_prompt
+from src.llm.prompt_loader import get_prompt_hash, load_prompt
 from src.models.profile import Profile
 from src.models.tailoring import TailoringSession
 from src.tailor.generator import resolve_plan_items
@@ -55,6 +55,7 @@ async def generate_cover_letter(
     result = parse_llm_json(raw, "cover_letter")
 
     session.cover_letter_json = result
+    session.cover_letter_prompt_version = get_prompt_hash("cover_letter.system")
     session.cover_letter_generating = False
     db.commit()
 

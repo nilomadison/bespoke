@@ -30,6 +30,7 @@ class TailoringSession(Base, TimestampMixin):
     # Stage 1 outputs
     analysis_json: Mapped[dict | None] = mapped_column(JSON)
     analysis_prompt_version: Mapped[str | None] = mapped_column(String(16))
+    plan_prompt_version: Mapped[str | None] = mapped_column(String(16))
 
     # Stage 2 outputs (Milestone 3)
     generated_json: Mapped[dict | None] = mapped_column(JSON)
@@ -38,6 +39,7 @@ class TailoringSession(Base, TimestampMixin):
     # Stage 3 outputs (Milestone 4) — cover letter
     cover_letter_json: Mapped[dict | None] = mapped_column(JSON)
     cover_letter_generating: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    cover_letter_prompt_version: Mapped[str | None] = mapped_column(String(16))
 
     # Error state for background task failures
     error_message: Mapped[str | None] = mapped_column(Text)

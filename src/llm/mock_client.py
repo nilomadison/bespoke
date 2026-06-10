@@ -20,8 +20,9 @@ class MockLLMClient:
     ) -> str:
         prompt_lower = system_prompt.lower()
         # Check most-specific patterns first to avoid substring false positives.
-        # "explanation" contains "plan"; "resume writer" is unique to generate/system.md.
-        if "cover letter writer" in prompt_lower:
+        # "explanation" contains "plan"; "resume writer" is unique to generate/system.md;
+        # "cover letter" appears only in cover_letter/system.md.
+        if "cover letter" in prompt_lower:
             return (FIXTURES_DIR / "sample_cover_letter.json").read_text()
         if "resume writer" in prompt_lower:
             return (FIXTURES_DIR / "sample_generation.json").read_text()

@@ -1,11 +1,11 @@
-from .base import Base, TimestampMixin
-from .profile import Profile
-from .job import Job, EmploymentType
 from .achievement import Achievement
-from .skill import Skill, JobSkill
+from .base import Base, TimestampMixin
+from .education import Certification, Education
+from .job import EmploymentType, Job
+from .profile import Profile
 from .project import Project, ProjectSkill
-from .education import Education, Certification
-from .tailoring import TailoringSession, TailoringStatus, PlanItem, PlanItemType
+from .skill import JobSkill, Skill
+from .tailoring import PlanItem, PlanItemType, TailoringSession, TailoringStatus
 
 __all__ = [
     "Base",

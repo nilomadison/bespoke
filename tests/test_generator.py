@@ -4,6 +4,7 @@ Unit tests for the resume generator.
 Covers: resolve_plan_items context building, generate_resume LLM call,
 DB persistence, error handling, and the anti-hallucination invariant.
 """
+
 import asyncio
 from datetime import date
 
@@ -19,10 +20,10 @@ from src.models.project import Project
 from src.models.tailoring import PlanItem, PlanItemType, TailoringSession, TailoringStatus
 from src.tailor.generator import generate_resume, resolve_plan_items
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def make_session_with_plan(db) -> TailoringSession:
     job = Job(
@@ -86,16 +87,42 @@ def make_session_with_plan(db) -> TailoringSession:
     db.refresh(session)
 
     items = [
-        PlanItem(session_id=session.id, item_type=PlanItemType.JOB, reference_id=job.id,
-                 include=True, sort_order=0),
-        PlanItem(session_id=session.id, item_type=PlanItemType.ACHIEVEMENT, reference_id=ach.id,
-                 include=True, sort_order=1),
-        PlanItem(session_id=session.id, item_type=PlanItemType.SKILL_GROUP, reference_id=None,
-                 include=True, emphasis_note="Python, FastAPI, Docker", sort_order=2),
-        PlanItem(session_id=session.id, item_type=PlanItemType.PROJECT, reference_id=proj.id,
-                 include=True, sort_order=3),
-        PlanItem(session_id=session.id, item_type=PlanItemType.EDUCATION, reference_id=edu.id,
-                 include=True, sort_order=4),
+        PlanItem(
+            session_id=session.id,
+            item_type=PlanItemType.JOB,
+            reference_id=job.id,
+            include=True,
+            sort_order=0,
+        ),
+        PlanItem(
+            session_id=session.id,
+            item_type=PlanItemType.ACHIEVEMENT,
+            reference_id=ach.id,
+            include=True,
+            sort_order=1,
+        ),
+        PlanItem(
+            session_id=session.id,
+            item_type=PlanItemType.SKILL_GROUP,
+            reference_id=None,
+            include=True,
+            emphasis_note="Python, FastAPI, Docker",
+            sort_order=2,
+        ),
+        PlanItem(
+            session_id=session.id,
+            item_type=PlanItemType.PROJECT,
+            reference_id=proj.id,
+            include=True,
+            sort_order=3,
+        ),
+        PlanItem(
+            session_id=session.id,
+            item_type=PlanItemType.EDUCATION,
+            reference_id=edu.id,
+            include=True,
+            sort_order=4,
+        ),
     ]
     db.add_all(items)
     db.commit()
@@ -116,6 +143,7 @@ def load_session_with_items(db, session_id: int) -> TailoringSession:
 # resolve_plan_items
 # ---------------------------------------------------------------------------
 
+
 def test_resolve_includes_job_and_achievements(db_session):
     session = make_session_with_plan(db_session)
     session = load_session_with_items(db_session, session.id)
@@ -126,7 +154,9 @@ def test_resolve_includes_job_and_achievements(db_session):
     exp = ctx["experiences"][0]
     assert exp["job"]["company"] == "Widgets Inc"
     assert len(exp["selected_achievements"]) == 1
-    assert exp["selected_achievements"][0]["text"] == "Scaled the API gateway to 500M requests per day"
+    assert (
+        exp["selected_achievements"][0]["text"] == "Scaled the API gateway to 500M requests per day"
+    )
 
 
 def test_resolve_excludes_deselected_achievement(db_session):
@@ -190,6 +220,7 @@ def test_anti_hallucination_metric_in_context(db_session):
 # generate_resume
 # ---------------------------------------------------------------------------
 
+
 def test_generate_returns_required_fields(db_session):
     session = make_session_with_plan(db_session)
 
@@ -216,12 +247,13 @@ def test_generate_bad_json_raises(db_session):
     class BadJSONClient:
         async def chat(self, **kwargs):
             return "this is not json at all"
+
         async def close(self):
             pass
 
     session = make_session_with_plan(db_session)
 
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         asyncio.run(generate_resume(session.id, db_session, BadJSONClient()))
 
 
@@ -231,16 +263,14 @@ def test_generate_missing_session_raises(db_session):
 
 
 def test_generate_fenced_json_parses(db_session):
-    import json
     from pathlib import Path
 
-    fixture = (
-        Path(__file__).parent / "fixtures" / "sample_generation.json"
-    ).read_text()
+    fixture = (Path(__file__).parent / "fixtures" / "sample_generation.json").read_text()
 
     class FencedClient:
         async def chat(self, **kwargs):
             return f"```json\n{fixture}\n```"
+
         async def close(self):
             pass
 

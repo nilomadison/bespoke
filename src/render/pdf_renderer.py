@@ -4,6 +4,7 @@ Mirrors src.render.docx_renderer.render_to_docx in structure and output, but emi
 PDF via ReportLab. ATS rules: single-column flow, no tables, Helvetica family
 (the PDF-safe substitute for Calibri), 0.75" margins.
 """
+
 import io
 
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
@@ -26,24 +27,51 @@ def render_to_pdf(generated: dict, profile: dict) -> bytes:
     )
 
     name_style = ParagraphStyle(
-        "Name", fontName="Helvetica-Bold", fontSize=16, alignment=TA_CENTER, spaceAfter=2,
+        "Name",
+        fontName="Helvetica-Bold",
+        fontSize=16,
+        alignment=TA_CENTER,
+        spaceAfter=2,
     )
     contact_style = ParagraphStyle(
-        "Contact", fontName="Helvetica", fontSize=10, alignment=TA_CENTER, spaceAfter=10,
+        "Contact",
+        fontName="Helvetica",
+        fontSize=10,
+        alignment=TA_CENTER,
+        spaceAfter=10,
     )
     section_style = ParagraphStyle(
-        "Section", fontName="Helvetica-Bold", fontSize=12, alignment=TA_LEFT,
-        spaceBefore=10, spaceAfter=4, textColor="#222222",
+        "Section",
+        fontName="Helvetica-Bold",
+        fontSize=12,
+        alignment=TA_LEFT,
+        spaceBefore=10,
+        spaceAfter=4,
+        textColor="#222222",
     )
     body_style = ParagraphStyle(
-        "Body", fontName="Helvetica", fontSize=11, alignment=TA_LEFT, leading=14, spaceAfter=4,
+        "Body",
+        fontName="Helvetica",
+        fontSize=11,
+        alignment=TA_LEFT,
+        leading=14,
+        spaceAfter=4,
     )
     item_head_style = ParagraphStyle(
-        "ItemHead", fontName="Helvetica-Bold", fontSize=11, alignment=TA_LEFT, spaceAfter=2,
+        "ItemHead",
+        fontName="Helvetica-Bold",
+        fontSize=11,
+        alignment=TA_LEFT,
+        spaceAfter=2,
     )
     bullet_style = ParagraphStyle(
-        "Bullet", fontName="Helvetica", fontSize=11, alignment=TA_LEFT, leading=14,
-        leftIndent=10, spaceAfter=2,
+        "Bullet",
+        fontName="Helvetica",
+        fontSize=11,
+        alignment=TA_LEFT,
+        leading=14,
+        leftIndent=10,
+        spaceAfter=2,
     )
 
     story = []
@@ -85,7 +113,8 @@ def render_to_pdf(generated: dict, profile: dict) -> bytes:
             if bullets:
                 items = [
                     ListItem(Paragraph(_escape(b), bullet_style), leftIndent=12)
-                    for b in bullets if b
+                    for b in bullets
+                    if b
                 ]
                 if items:
                     story.append(ListFlowable(items, bulletType="bullet", leftIndent=14))
@@ -131,8 +160,4 @@ def _escape(text: str) -> str:
     """Escape for ReportLab paragraph mini-XML."""
     if not text:
         return ""
-    return (
-        text.replace("&", "&amp;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
-    )
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")

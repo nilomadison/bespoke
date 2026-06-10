@@ -1,15 +1,18 @@
 """PDF export tests."""
+
 from src.models.tailoring import TailoringSession, TailoringStatus
 from src.render.pdf_renderer import render_to_pdf
 
 GENERATED_JSON = {
     "summary": "Senior backend engineer with scale experience.",
-    "experience": [{
-        "company": "Acme",
-        "title": "Staff Engineer",
-        "dates": "2021–Now",
-        "bullets": ["Cut p99 latency 40%.", "Mentored 4 juniors."],
-    }],
+    "experience": [
+        {
+            "company": "Acme",
+            "title": "Staff Engineer",
+            "dates": "2021–Now",
+            "bullets": ["Cut p99 latency 40%.", "Mentored 4 juniors."],
+        }
+    ],
     "skills": "Python, Go, Postgres",
     "projects": [{"name": "Bespoke", "description": "Resume tool."}],
     "education": [{"institution": "MIT", "degree": "B.S.", "dates": "2015–2019"}],
@@ -48,14 +51,25 @@ def test_render_to_pdf_escapes_html_chars():
 
 def _make_generated(db) -> TailoringSession:
     s = TailoringSession(
-        job_title="Staff Engineer", company_name="Acme",
-        job_description="x", status=TailoringStatus.GENERATED,
-        analysis_json={"required_skills": [], "preferred_skills": [], "role_level": "senior",
-                       "domain": "b", "tone": "f", "impact_signals": [], "red_flags": [],
-                       "emphasis_guidance": ""},
+        job_title="Staff Engineer",
+        company_name="Acme",
+        job_description="x",
+        status=TailoringStatus.GENERATED,
+        analysis_json={
+            "required_skills": [],
+            "preferred_skills": [],
+            "role_level": "senior",
+            "domain": "b",
+            "tone": "f",
+            "impact_signals": [],
+            "red_flags": [],
+            "emphasis_guidance": "",
+        },
         generated_json=GENERATED_JSON,
     )
-    db.add(s); db.commit(); db.refresh(s)
+    db.add(s)
+    db.commit()
+    db.refresh(s)
     return s
 
 
@@ -83,10 +97,14 @@ def test_export_pdf_marks_session_exported(client, db_session):
 
 def test_export_pdf_400_when_not_generated(client, db_session):
     s = TailoringSession(
-        job_title="X", company_name="Y", job_description="Z",
+        job_title="X",
+        company_name="Y",
+        job_description="Z",
         status=TailoringStatus.DRAFT,
     )
-    db_session.add(s); db_session.commit(); db_session.refresh(s)
+    db_session.add(s)
+    db_session.commit()
+    db_session.refresh(s)
     resp = client.get(f"/tailor/{s.id}/export.pdf")
     assert resp.status_code == 400
 
@@ -102,7 +120,11 @@ def test_export_pdf_uses_edited_generated_json(client, db_session):
 
     client.post(
         f"/tailor/{s.id}/result/field",
-        data={"path": "summary", "value": "Hand-edited summary phrase that is much longer than the original to force a meaningful change in the rendered output."},
+        data={
+            "path": "summary",
+            "value": "Hand-edited summary phrase that is much longer than the original "
+            "to force a meaningful change in the rendered output.",
+        },
     )
     after = client.get(f"/tailor/{s.id}/export.pdf").content
 

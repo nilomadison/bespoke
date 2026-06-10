@@ -7,15 +7,17 @@ Revises: 0001_m1_baseline
 Create Date: 2026-05-01
 
 """
-from typing import Sequence, Union
+
+from collections.abc import Sequence
 
 import sqlalchemy as sa
+
 from alembic import op
 
 revision: str = "0002_add_tailoring"
-down_revision: Union[str, Sequence[str], None] = "0001_m1_baseline"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | Sequence[str] | None = "0001_m1_baseline"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -28,7 +30,12 @@ def upgrade() -> None:
         sa.Column(
             "status",
             sa.Enum(
-                "DRAFT", "ANALYZING", "ANALYZED", "PLAN_EDITED", "GENERATED", "EXPORTED",
+                "DRAFT",
+                "ANALYZING",
+                "ANALYZED",
+                "PLAN_EDITED",
+                "GENERATED",
+                "EXPORTED",
                 name="tailoringstatus",
             ),
             nullable=False,
@@ -59,7 +66,12 @@ def upgrade() -> None:
         sa.Column(
             "item_type",
             sa.Enum(
-                "JOB", "ACHIEVEMENT", "SKILL_GROUP", "PROJECT", "EDUCATION", "CERTIFICATION",
+                "JOB",
+                "ACHIEVEMENT",
+                "SKILL_GROUP",
+                "PROJECT",
+                "EDUCATION",
+                "CERTIFICATION",
                 name="planitemtype",
             ),
             nullable=False,

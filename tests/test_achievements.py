@@ -114,9 +114,7 @@ def test_update_achievement(client, db_session):
 
 def test_delete_achievement(client, db_session):
     job = _setup(db_session)
-    ach = Achievement(
-        job_id=job.id, text="To delete", impact_tags=[], prominence=3, sort_order=0
-    )
+    ach = Achievement(job_id=job.id, text="To delete", impact_tags=[], prominence=3, sort_order=0)
     db_session.add(ach)
     db_session.commit()
     ach_id = ach.id

@@ -1,5 +1,7 @@
 """Heuristic profile-to-job match scoring. No LLM call — computed from DB + analysis_json."""
+
 from dataclasses import dataclass, field
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -28,13 +30,18 @@ class MatchScore:
 
 # Map seniority keywords to a numeric rank for comparison
 _SENIORITY_RANK: dict[str, int] = {
-    "junior": 1, "associate": 1,
+    "junior": 1,
+    "associate": 1,
     "mid": 2,
     "senior": 3,
-    "lead": 4, "staff": 4,
-    "principal": 5, "architect": 5,
+    "lead": 4,
+    "staff": 4,
+    "principal": 5,
+    "architect": 5,
     "manager": 4,
-    "director": 6, "vp": 7, "cto": 8,
+    "director": 6,
+    "vp": 7,
+    "cto": 8,
 }
 
 _TITLE_KEYWORDS = frozenset(_SENIORITY_RANK)

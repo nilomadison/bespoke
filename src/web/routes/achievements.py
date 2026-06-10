@@ -1,5 +1,3 @@
-import json
-
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse
 from sqlalchemy import select
@@ -112,9 +110,7 @@ def update_achievement(
 
 
 @router.post("/{achievement_id}/delete", response_class=HTMLResponse)
-def delete_achievement(
-    job_id: int, achievement_id: int, db: Session = Depends(get_session)
-):
+def delete_achievement(job_id: int, achievement_id: int, db: Session = Depends(get_session)):
     achievement = db.get(Achievement, achievement_id)
     if achievement:
         db.delete(achievement)

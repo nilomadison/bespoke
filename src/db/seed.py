@@ -71,9 +71,7 @@ def seed(seed_file: Path) -> None:
         js_total = 0
         for j in data.get("jobs", []):
             existing_job = (
-                db.query(Job)
-                .filter(Job.title == j["title"], Job.company == j["company"])
-                .first()
+                db.query(Job).filter(Job.title == j["title"], Job.company == j["company"]).first()
             )
             if existing_job:
                 job = existing_job
@@ -107,28 +105,34 @@ def seed(seed_file: Path) -> None:
                 tags = ach.get("impact_tags", [])
                 if isinstance(tags, str):
                     tags = [t.strip() for t in tags.split(",") if t.strip()]
-                db.add(Achievement(
-                    job_id=job.id,
-                    text=ach["text"],
-                    metric=ach.get("metric"),
-                    impact_tags=tags,
-                    prominence=ach.get("prominence", 3),
-                    sort_order=idx,
-                ))
+                db.add(
+                    Achievement(
+                        job_id=job.id,
+                        text=ach["text"],
+                        metric=ach.get("metric"),
+                        impact_tags=tags,
+                        prominence=ach.get("prominence", 3),
+                        sort_order=idx,
+                    )
+                )
             for existing in list(job.job_skills):
                 db.delete(existing)
             db.flush()
             for sk in j.get("skills", []):
                 skill = skill_map.get(sk["name"])
                 if not skill:
-                    print(f"  WARNING: skill '{sk['name']}' not found for {j['company']}/{j['title']}")
+                    print(
+                        f"  WARNING: skill '{sk['name']}' not found for {j['company']}/{j['title']}"
+                    )
                     continue
-                db.add(JobSkill(
-                    job_id=job.id,
-                    skill_id=skill.id,
-                    proficiency=sk.get("proficiency"),
-                    years_used=sk.get("years_used"),
-                ))
+                db.add(
+                    JobSkill(
+                        job_id=job.id,
+                        skill_id=skill.id,
+                        proficiency=sk.get("proficiency"),
+                        years_used=sk.get("years_used"),
+                    )
+                )
                 js_total += 1
             db.commit()
             job_map[(j["company"], j["title"])] = job
@@ -199,8 +203,7 @@ def seed(seed_file: Path) -> None:
                     p.job_id = linked.id
                 else:
                     print(
-                        f"  WARNING: project '{proj['name']}' references unknown "
-                        f"job: {job_ref}"
+                        f"  WARNING: project '{proj['name']}' references unknown " f"job: {job_ref}"
                     )
                     p.job_id = None
             else:

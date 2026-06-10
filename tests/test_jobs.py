@@ -127,6 +127,7 @@ def test_delete_job(client, db_session):
 
 def test_delete_job_cascades_achievements(client, db_session):
     from src.models.achievement import Achievement
+
     job = _create_job(db_session)
     ach = Achievement(job_id=job.id, text="Did a thing", impact_tags=[], prominence=3, sort_order=0)
     db_session.add(ach)

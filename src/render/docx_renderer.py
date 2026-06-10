@@ -61,9 +61,7 @@ def render_to_docx(generated: dict, profile: dict) -> DocxDocument:
         doc.add_heading("Experience", level=1)
         for exp in generated["experience"]:
             job_para = doc.add_paragraph()
-            title_run = job_para.add_run(
-                f"{exp.get('title', '')}  —  {exp.get('company', '')}"
-            )
+            title_run = job_para.add_run(f"{exp.get('title', '')}  —  {exp.get('company', '')}")
             title_run.bold = True
             title_run.font.name = "Calibri"
             dates = exp.get("dates", "")
@@ -91,9 +89,7 @@ def render_to_docx(generated: dict, profile: dict) -> DocxDocument:
         doc.add_heading("Education", level=1)
         for edu in generated["education"]:
             edu_para = doc.add_paragraph()
-            edu_run = edu_para.add_run(
-                f"{edu.get('degree', '')}  —  {edu.get('institution', '')}"
-            )
+            edu_run = edu_para.add_run(f"{edu.get('degree', '')}  —  {edu.get('institution', '')}")
             edu_run.bold = True
             edu_run.font.name = "Calibri"
             dates = edu.get("dates", "")

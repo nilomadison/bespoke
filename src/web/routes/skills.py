@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from src.db.session import get_session
-from src.models.skill import JobSkill, Skill
+from src.models.skill import Skill
 from src.web.deps import templates
 
 router = APIRouter(prefix="/skills", tags=["skills"])

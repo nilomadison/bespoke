@@ -1,4 +1,3 @@
-import json
 from pathlib import Path
 
 FIXTURES_DIR = Path(__file__).resolve().parents[2] / "tests" / "fixtures"

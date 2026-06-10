@@ -1,3 +1,6 @@
+import pytest
+from sqlalchemy.exc import IntegrityError
+
 from src.models.skill import Skill
 
 
@@ -18,8 +21,7 @@ def test_skill_unique_constraint(client, db_session):
     db_session.add(Skill(name="Python", category="Languages"))
     db_session.commit()
     # Duplicate should raise — the route doesn't guard this, SQLAlchemy will raise
-    import pytest
-    with pytest.raises(Exception):
+    with pytest.raises(IntegrityError):
         client.post("/skills/", data={"name": "Python", "category": "Other"})
 
 
@@ -51,9 +53,7 @@ def test_update_skill(client, db_session):
     db_session.commit()
     db_session.refresh(skill)
 
-    response = client.post(
-        f"/skills/{skill.id}", data={"name": "Rust", "category": "Systems"}
-    )
+    response = client.post(f"/skills/{skill.id}", data={"name": "Rust", "category": "Systems"})
     assert response.status_code == 200
     assert "Systems" in response.text
     db_session.expire_all()

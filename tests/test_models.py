@@ -1,4 +1,5 @@
 """Tests for model constraints, cascade deletes, and DB initialization."""
+
 from datetime import date
 
 from src.models.achievement import Achievement
@@ -18,6 +19,7 @@ def test_profile_seeded(db_session):
 def test_profile_is_singleton(db_session):
     """init_db must not create a second profile row if one exists."""
     from src.db.init_db import init_db
+
     # init_db should be idempotent
     init_db()
     count = db_session.query(Profile).count()
@@ -26,8 +28,10 @@ def test_profile_is_singleton(db_session):
 
 def test_job_cascade_delete_achievements(db_session):
     job = Job(
-        title="Eng", company="Co", start_date=date(2020, 1, 1),
-        employment_type=EmploymentType.FULL_TIME
+        title="Eng",
+        company="Co",
+        start_date=date(2020, 1, 1),
+        employment_type=EmploymentType.FULL_TIME,
     )
     db_session.add(job)
     db_session.commit()
@@ -44,6 +48,7 @@ def test_job_cascade_delete_achievements(db_session):
 def test_skill_unique_name(db_session):
     import pytest
     from sqlalchemy.exc import IntegrityError
+
     db_session.add(Skill(name="Python", category="Languages"))
     db_session.commit()
     db_session.add(Skill(name="Python", category="Other"))
@@ -80,8 +85,10 @@ def test_project_optional_job_link(db_session):
 
 def test_achievement_impact_tags_json(db_session):
     job = Job(
-        title="Dev", company="X", start_date=date(2021, 1, 1),
-        employment_type=EmploymentType.FULL_TIME
+        title="Dev",
+        company="X",
+        start_date=date(2021, 1, 1),
+        employment_type=EmploymentType.FULL_TIME,
     )
     db_session.add(job)
     db_session.commit()

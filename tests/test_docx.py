@@ -4,7 +4,6 @@ Tests for the .docx renderer.
 Verifies: correct sections present, no tables (ATS rule), name/contact in header,
 experience bullets, projects, education, and that the file serializes to bytes.
 """
-import io
 
 from docx.document import Document as DocxDocument
 
@@ -24,9 +23,7 @@ SAMPLE_GENERATED = {
         }
     ],
     "skills": "Python, FastAPI, Docker, Kubernetes",
-    "projects": [
-        {"name": "Bespoke", "description": "LLM-powered resume tailoring tool."}
-    ],
+    "projects": [{"name": "Bespoke", "description": "LLM-powered resume tailoring tool."}],
     "education": [
         {"institution": "UC Berkeley", "degree": "B.S. Computer Science", "dates": "2012–2016"}
     ],
@@ -41,7 +38,7 @@ SAMPLE_PROFILE = {
 }
 
 
-def full_text(doc: Document) -> str:
+def full_text(doc: DocxDocument) -> str:
     return "\n".join(p.text for p in doc.paragraphs)
 
 

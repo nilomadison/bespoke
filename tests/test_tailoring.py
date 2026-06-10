@@ -6,14 +6,16 @@ Covers: session creation, status polling, plan view, toggle, note update, and de
 Background tasks are NOT run in these tests — we manually set session state to
 simulate what the analysis pipeline would produce, keeping tests fast and deterministic.
 """
-import pytest
+
 from sqlalchemy import select
 
 from src.models.tailoring import PlanItem, PlanItemType, TailoringSession, TailoringStatus
 
 GENERATED_JSON = {
     "summary": "Experienced engineer.",
-    "experience": [{"company": "Acme", "title": "Engineer", "dates": "2021–Now", "bullets": ["Built X."]}],
+    "experience": [
+        {"company": "Acme", "title": "Engineer", "dates": "2021–Now", "bullets": ["Built X."]}
+    ],
     "skills": "Python, Docker",
     "projects": [{"name": "Bespoke", "description": "Resume tool."}],
     "education": [{"institution": "MIT", "degree": "B.S.", "dates": "2015–2019"}],
@@ -23,6 +25,7 @@ GENERATED_JSON = {
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def make_session(db, status=TailoringStatus.ANALYZED) -> TailoringSession:
     s = TailoringSession(
@@ -67,6 +70,7 @@ def make_plan_item(db, session_id, include=True, emphasis_note=None) -> PlanItem
 # Index
 # ---------------------------------------------------------------------------
 
+
 def test_tailor_index_empty(client):
     resp = client.get("/tailor/")
     assert resp.status_code == 200
@@ -83,6 +87,7 @@ def test_tailor_index_shows_sessions(client, db_session):
 # ---------------------------------------------------------------------------
 # New / Create
 # ---------------------------------------------------------------------------
+
 
 def test_new_session_form(client):
     resp = client.get("/tailor/new")
@@ -124,6 +129,7 @@ def test_create_session_persists(client, db_session):
 # Status polling
 # ---------------------------------------------------------------------------
 
+
 def test_status_returns_spinner_when_analyzing(client, db_session):
     s = make_session(db_session, status=TailoringStatus.ANALYZING)
     resp = client.get(f"/tailor/{s.id}/status")
@@ -164,6 +170,7 @@ def test_status_404_for_missing_session(client):
 # Plan view
 # ---------------------------------------------------------------------------
 
+
 def test_plan_shows_analysis_summary(client, db_session):
     s = make_session(db_session)
     resp = client.get(f"/tailor/{s.id}/plan")
@@ -189,6 +196,7 @@ def test_plan_shows_items(client, db_session):
 # ---------------------------------------------------------------------------
 # Toggle
 # ---------------------------------------------------------------------------
+
 
 def test_toggle_flips_include(client, db_session):
     s = make_session(db_session)
@@ -244,6 +252,7 @@ def test_toggle_wrong_session_returns_404(client, db_session):
 # Note update
 # ---------------------------------------------------------------------------
 
+
 def test_note_saves(client, db_session):
     s = make_session(db_session)
     item = make_plan_item(db_session, s.id)
@@ -288,6 +297,7 @@ def test_note_marks_session_plan_edited(client, db_session):
 # Delete
 # ---------------------------------------------------------------------------
 
+
 def test_delete_removes_session(client, db_session):
     s = make_session(db_session)
     sid = s.id
@@ -307,6 +317,7 @@ def test_delete_nonexistent_is_safe(client):
 # ---------------------------------------------------------------------------
 # Generate
 # ---------------------------------------------------------------------------
+
 
 def test_generate_redirects_to_result(client, db_session):
     s = make_session(db_session)
@@ -338,6 +349,7 @@ def test_status_redirects_to_result_when_generated(client, db_session):
 # Result page
 # ---------------------------------------------------------------------------
 
+
 def test_result_shows_spinner_when_generating(client, db_session):
     s = make_session(db_session, status=TailoringStatus.GENERATING)
     resp = client.get(f"/tailor/{s.id}/result")
@@ -352,8 +364,13 @@ def test_result_shows_generated_resume(client, db_session):
         job_description="Build stuff.",
         status=TailoringStatus.GENERATED,
         analysis_json={
-            "required_skills": ["Python"], "preferred_skills": [], "role_level": "senior",
-            "domain": "backend", "tone": "formal", "impact_signals": [], "red_flags": [],
+            "required_skills": ["Python"],
+            "preferred_skills": [],
+            "role_level": "senior",
+            "domain": "backend",
+            "tone": "formal",
+            "impact_signals": [],
+            "red_flags": [],
             "emphasis_guidance": "",
         },
         generated_json=GENERATED_JSON,
@@ -377,6 +394,7 @@ def test_result_404_for_missing_session(client):
 # Export
 # ---------------------------------------------------------------------------
 
+
 def test_export_returns_docx(client, db_session):
     s = TailoringSession(
         job_title="Staff Engineer",
@@ -384,8 +402,13 @@ def test_export_returns_docx(client, db_session):
         job_description="Build stuff.",
         status=TailoringStatus.GENERATED,
         analysis_json={
-            "required_skills": ["Python"], "preferred_skills": [], "role_level": "senior",
-            "domain": "backend", "tone": "formal", "impact_signals": [], "red_flags": [],
+            "required_skills": ["Python"],
+            "preferred_skills": [],
+            "role_level": "senior",
+            "domain": "backend",
+            "tone": "formal",
+            "impact_signals": [],
+            "red_flags": [],
             "emphasis_guidance": "",
         },
         generated_json=GENERATED_JSON,
@@ -407,8 +430,13 @@ def test_export_marks_session_exported(client, db_session):
         job_description="Build stuff.",
         status=TailoringStatus.GENERATED,
         analysis_json={
-            "required_skills": ["Python"], "preferred_skills": [], "role_level": "senior",
-            "domain": "backend", "tone": "formal", "impact_signals": [], "red_flags": [],
+            "required_skills": ["Python"],
+            "preferred_skills": [],
+            "role_level": "senior",
+            "domain": "backend",
+            "tone": "formal",
+            "impact_signals": [],
+            "red_flags": [],
             "emphasis_guidance": "",
         },
         generated_json=GENERATED_JSON,
@@ -431,6 +459,7 @@ def test_export_400_when_not_generated(client, db_session):
 # ---------------------------------------------------------------------------
 # Cover letter — start (POST)
 # ---------------------------------------------------------------------------
+
 
 def make_generated_session(db_session) -> TailoringSession:
     s = TailoringSession(
@@ -495,6 +524,7 @@ def test_start_cover_letter_404_for_missing(client):
 # Cover letter — view (GET)
 # ---------------------------------------------------------------------------
 
+
 def test_view_cover_letter_shows_generate_button_when_no_json(client, db_session):
     s = make_generated_session(db_session)
     resp = client.get(f"/tailor/{s.id}/cover-letter")
@@ -537,6 +567,7 @@ def test_view_cover_letter_404_for_missing(client):
 # Cover letter — status polling (GET)
 # ---------------------------------------------------------------------------
 
+
 def test_cover_letter_status_spinner_when_generating(client, db_session):
     s = make_generated_session(db_session)
     s.cover_letter_generating = True
@@ -566,15 +597,23 @@ def test_cover_letter_status_404_for_missing(client):
 # Retry analysis / generation
 # ---------------------------------------------------------------------------
 
+
 def test_retry_analysis_clears_plan_items_and_resets_status(client, db_session):
     s = TailoringSession(
         job_title="Staff Engineer",
         company_name="Widgets Inc",
         job_description="Build scalable systems.",
         status=TailoringStatus.DRAFT,
-        analysis_json={"required_skills": ["Python"], "preferred_skills": [],
-                       "role_level": "staff", "domain": "backend", "tone": "formal",
-                       "impact_signals": [], "red_flags": [], "emphasis_guidance": ""},
+        analysis_json={
+            "required_skills": ["Python"],
+            "preferred_skills": [],
+            "role_level": "staff",
+            "domain": "backend",
+            "tone": "formal",
+            "impact_signals": [],
+            "red_flags": [],
+            "emphasis_guidance": "",
+        },
         analysis_prompt_version="abc123",
         error_message="LLM timeout",
     )
@@ -631,7 +670,9 @@ def test_retry_generation_404_for_missing(client):
 
 def test_plan_page_shows_error_with_retry_button(client, db_session):
     s = TailoringSession(
-        job_title="X", company_name="Y", job_description="Z",
+        job_title="X",
+        company_name="Y",
+        job_description="Z",
         status=TailoringStatus.DRAFT,
         error_message="Connection refused",
     )
@@ -662,6 +703,7 @@ def test_result_page_shows_error_with_retry_button(client, db_session):
 # Reorder plan items
 # ---------------------------------------------------------------------------
 
+
 def test_reorder_updates_sort_order(client, db_session):
     s = make_session(db_session)
     a = make_plan_item(db_session, s.id)
@@ -675,7 +717,9 @@ def test_reorder_updates_sort_order(client, db_session):
     )
     assert resp.status_code == 204
 
-    db_session.refresh(a); db_session.refresh(b); db_session.refresh(c)
+    db_session.refresh(a)
+    db_session.refresh(b)
+    db_session.refresh(c)
     assert c.sort_order == 0
     assert b.sort_order == 10
     assert a.sort_order == 20
@@ -741,19 +785,33 @@ def test_plan_item_renders_drag_handle(client, db_session):
 # Add custom plan item — picker (GET) and create (POST)
 # ---------------------------------------------------------------------------
 
+
 def _make_achievement(db, job_id: int, text: str = "Built thing.", metric: str | None = None):
     from src.models.achievement import Achievement
+
     a = Achievement(job_id=job_id, text=text, metric=metric, prominence=3, sort_order=0)
-    db.add(a); db.commit(); db.refresh(a)
+    db.add(a)
+    db.commit()
+    db.refresh(a)
     return a
 
 
 def _make_job(db, title: str = "Engineer", company: str = "Acme"):
     from datetime import date
-    from src.models.job import Job, EmploymentType
-    j = Job(title=title, company=company, employment_type=EmploymentType.FULL_TIME,
-            start_date=date(2020, 1, 1), is_technical=True, sort_order=0)
-    db.add(j); db.commit(); db.refresh(j)
+
+    from src.models.job import EmploymentType, Job
+
+    j = Job(
+        title=title,
+        company=company,
+        employment_type=EmploymentType.FULL_TIME,
+        start_date=date(2020, 1, 1),
+        is_technical=True,
+        sort_order=0,
+    )
+    db.add(j)
+    db.commit()
+    db.refresh(j)
     return j
 
 
@@ -761,14 +819,18 @@ def test_picker_lists_unused_achievements(client, db_session):
     s = make_session(db_session)
     j = _make_job(db_session)
     a1 = _make_achievement(db_session, j.id, text="Reduced latency 50%.")
-    a2 = _make_achievement(db_session, j.id, text="Mentored 4 juniors.")
+    _make_achievement(db_session, j.id, text="Mentored 4 juniors.")
 
     # Put a1 on the plan; a2 should be available in the picker
     item = PlanItem(
-        session_id=s.id, item_type=PlanItemType.ACHIEVEMENT, reference_id=a1.id,
-        include=True, sort_order=0,
+        session_id=s.id,
+        item_type=PlanItemType.ACHIEVEMENT,
+        reference_id=a1.id,
+        include=True,
+        sort_order=0,
     )
-    db_session.add(item); db_session.commit()
+    db_session.add(item)
+    db_session.commit()
 
     resp = client.get(f"/tailor/{s.id}/plan/add")
     assert resp.status_code == 200
@@ -793,9 +855,9 @@ def test_add_achievement_creates_planitem(client, db_session):
     assert resp.status_code == 200
     assert resp.headers.get("HX-Redirect") == f"/tailor/{s.id}/plan"
 
-    items = [i for i in db_session.scalars(
-        select(PlanItem).where(PlanItem.session_id == s.id)
-    ).all()]
+    items = [
+        i for i in db_session.scalars(select(PlanItem).where(PlanItem.session_id == s.id)).all()
+    ]
     assert len(items) == 1
     assert items[0].item_type == PlanItemType.ACHIEVEMENT
     assert items[0].reference_id == a.id
@@ -811,9 +873,7 @@ def test_add_skill_group_uses_emphasis_note(client, db_session):
     )
     assert resp.status_code == 200
 
-    items = list(db_session.scalars(
-        select(PlanItem).where(PlanItem.session_id == s.id)
-    ).all())
+    items = list(db_session.scalars(select(PlanItem).where(PlanItem.session_id == s.id)).all())
     assert len(items) == 1
     assert items[0].item_type == PlanItemType.SKILL_GROUP
     assert items[0].reference_id is None
@@ -864,28 +924,48 @@ def test_add_marks_session_plan_edited(client, db_session):
 # Inline-editable result page
 # ---------------------------------------------------------------------------
 
+
 def _make_generated(db) -> TailoringSession:
     s = TailoringSession(
-        job_title="Eng", company_name="Acme", job_description="x",
+        job_title="Eng",
+        company_name="Acme",
+        job_description="x",
         status=TailoringStatus.GENERATED,
-        analysis_json={"required_skills": [], "preferred_skills": [], "role_level": "senior",
-                       "domain": "b", "tone": "f", "impact_signals": [], "red_flags": [],
-                       "emphasis_guidance": ""},
+        analysis_json={
+            "required_skills": [],
+            "preferred_skills": [],
+            "role_level": "senior",
+            "domain": "b",
+            "tone": "f",
+            "impact_signals": [],
+            "red_flags": [],
+            "emphasis_guidance": "",
+        },
         generated_json={
             "summary": "Original summary.",
             "skills": "Python, Go",
             "experience": [
-                {"title": "Engineer", "company": "Acme", "dates": "2021–Now",
-                 "bullets": ["Built X.", "Shipped Y."]},
-                {"title": "Junior Eng", "company": "Beta", "dates": "2019–2021",
-                 "bullets": ["Did Z."]},
+                {
+                    "title": "Engineer",
+                    "company": "Acme",
+                    "dates": "2021–Now",
+                    "bullets": ["Built X.", "Shipped Y."],
+                },
+                {
+                    "title": "Junior Eng",
+                    "company": "Beta",
+                    "dates": "2019–2021",
+                    "bullets": ["Did Z."],
+                },
             ],
             "projects": [{"name": "Bespoke", "description": "Tool."}],
             "education": [{"degree": "B.S.", "institution": "MIT", "dates": "2015–2019"}],
             "certifications": [{"name": "AWS SAA", "issuer": "Amazon", "year": "2022"}],
         },
     )
-    db.add(s); db.commit(); db.refresh(s)
+    db.add(s)
+    db.commit()
+    db.refresh(s)
     return s
 
 
@@ -1006,16 +1086,23 @@ def test_add_uses_increasing_sort_order(client, db_session):
 
     # Existing item with sort_order=50 — added items should land after
     existing = PlanItem(
-        session_id=s.id, item_type=PlanItemType.ACHIEVEMENT, reference_id=a1.id,
-        sort_order=50, include=True,
+        session_id=s.id,
+        item_type=PlanItemType.ACHIEVEMENT,
+        reference_id=a1.id,
+        sort_order=50,
+        include=True,
     )
-    db_session.add(existing); db_session.commit()
+    db_session.add(existing)
+    db_session.commit()
 
     client.post(
         f"/tailor/{s.id}/plan/add",
         data={"item_type": "achievement", "reference_id": a2.id},
     )
-    new_items = [i for i in db_session.scalars(
-        select(PlanItem).where(PlanItem.session_id == s.id, PlanItem.reference_id == a2.id)
-    ).all()]
+    new_items = [
+        i
+        for i in db_session.scalars(
+            select(PlanItem).where(PlanItem.session_id == s.id, PlanItem.reference_id == a2.id)
+        ).all()
+    ]
     assert new_items[0].sort_order == 60

@@ -16,6 +16,7 @@ text diff:
   plan     — which items were selected/dropped relative to each other
   generate — summary text and bullet-by-bullet experience comparison
 """
+
 import argparse
 import difflib
 import sys
@@ -38,11 +39,24 @@ def _c(text: str, code: str) -> str:
     return f"\033[{code}m{text}\033[0m"
 
 
-def green(t: str) -> str: return _c(t, "32")
-def red(t: str) -> str: return _c(t, "31")
-def yellow(t: str) -> str: return _c(t, "33")
-def bold(t: str) -> str: return _c(t, "1")
-def dim(t: str) -> str: return _c(t, "2")
+def green(t: str) -> str:
+    return _c(t, "32")
+
+
+def red(t: str) -> str:
+    return _c(t, "31")
+
+
+def yellow(t: str) -> str:
+    return _c(t, "33")
+
+
+def bold(t: str) -> str:
+    return _c(t, "1")
+
+
+def dim(t: str) -> str:
+    return _c(t, "2")
 
 
 def _header(title: str) -> None:
@@ -64,6 +78,7 @@ def _row(label: str, a: str, b: str, width: int = 26) -> None:
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _load_session(db, session_id: int) -> TailoringSession:
     session = db.get(TailoringSession, session_id)
     if session is None:
@@ -75,9 +90,7 @@ def _load_session(db, session_id: int) -> TailoringSession:
 def _load_plan_items(db, session_id: int) -> list[PlanItem]:
     return list(
         db.scalars(
-            select(PlanItem)
-            .where(PlanItem.session_id == session_id)
-            .order_by(PlanItem.sort_order)
+            select(PlanItem).where(PlanItem.session_id == session_id).order_by(PlanItem.sort_order)
         ).all()
     )
 
@@ -94,6 +107,7 @@ def _list_join(lst: list) -> str:
 # list mode
 # ---------------------------------------------------------------------------
 
+
 def cmd_list(db) -> None:
     sessions = db.scalars(
         select(TailoringSession).order_by(TailoringSession.created_at.desc())
@@ -101,7 +115,12 @@ def cmd_list(db) -> None:
     if not sessions:
         print("No sessions found.")
         return
-    print(bold(f"\n{'ID':>4}  {'Job title':<30}  {'Company':<20}  {'Status':<14}  {'Analyze v':<12}  {'Generate v':<12}"))
+    print(
+        bold(
+            f"\n{'ID':>4}  {'Job title':<30}  {'Company':<20}  {'Status':<14}  "
+            f"{'Analyze v':<12}  {'Generate v':<12}"
+        )
+    )
     print("─" * 100)
     for s in sessions:
         print(
@@ -115,11 +134,15 @@ def cmd_list(db) -> None:
 # analyze mode
 # ---------------------------------------------------------------------------
 
+
 def cmd_analyze(db, id1: int, id2: int) -> None:
     s1, s2 = _load_session(db, id1), _load_session(db, id2)
 
     _header(f"ANALYZE  session {id1} → session {id2}")
-    print(f"  {'Prompt version':<26} {dim(s1.analysis_prompt_version or '?')}  →  {s2.analysis_prompt_version or '?'}")
+    print(
+        f"  {'Prompt version':<26} {dim(s1.analysis_prompt_version or '?')}"
+        f"  →  {s2.analysis_prompt_version or '?'}"
+    )
     print(f"  {'Job title':<26} {s1.job_title}")
 
     a1 = s1.analysis_json or {}
@@ -173,6 +196,7 @@ def cmd_analyze(db, id1: int, id2: int) -> None:
 # plan mode
 # ---------------------------------------------------------------------------
 
+
 def cmd_plan(db, id1: int, id2: int) -> None:
     s1, s2 = _load_session(db, id1), _load_session(db, id2)
     items1 = _load_plan_items(db, id1)
@@ -220,14 +244,14 @@ def cmd_plan(db, id1: int, id2: int) -> None:
 # generate mode
 # ---------------------------------------------------------------------------
 
+
 def _diff_text(label: str, t1: str, t2: str) -> None:
     if t1 == t2:
         print(f"  {label}: {dim(t1[:80] + ('…' if len(t1) > 80 else ''))}")
         return
     print(f"  {label}:")
     differ = difflib.unified_diff(
-        t1.splitlines(), t2.splitlines(),
-        fromfile=f"session A", tofile=f"session B", lineterm=""
+        t1.splitlines(), t2.splitlines(), fromfile="session A", tofile="session B", lineterm=""
     )
     for line in list(differ)[2:]:  # skip the --- +++ header
         if line.startswith("+"):
@@ -292,6 +316,7 @@ def cmd_generate(db, id1: int, id2: int) -> None:
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(

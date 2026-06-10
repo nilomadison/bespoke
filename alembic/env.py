@@ -1,15 +1,14 @@
 import sys
-from pathlib import Path
 from logging.config import fileConfig
+from pathlib import Path
 
-from sqlalchemy import pool
 from alembic import context
 
 # Make src/ importable when Alembic runs from the project root
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from src.models import Base  # noqa: E402 — imports all models so autogenerate sees them
 from src.db.engine import engine as sync_engine  # noqa: E402
+from src.models import Base  # noqa: E402 — imports all models so autogenerate sees them
 
 config = context.config
 if config.config_file_name is not None:

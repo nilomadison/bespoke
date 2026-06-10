@@ -1,17 +1,17 @@
 import enum
 
-from sqlalchemy import Boolean, Enum, ForeignKey, Integer, JSON, String, Text
+from sqlalchemy import JSON, Boolean, Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base, TimestampMixin
 
 
 class TailoringStatus(str, enum.Enum):
-    DRAFT = "draft"           # JD entered, analysis not yet started
-    ANALYZING = "analyzing"   # stage 1 in progress (background task)
-    ANALYZED = "analyzed"     # plan created, ready for human review
+    DRAFT = "draft"  # JD entered, analysis not yet started
+    ANALYZING = "analyzing"  # stage 1 in progress (background task)
+    ANALYZED = "analyzed"  # plan created, ready for human review
     PLAN_EDITED = "plan_edited"
-    GENERATING = "generating" # stage 2 in progress (background task)
+    GENERATING = "generating"  # stage 2 in progress (background task)
     GENERATED = "generated"
     EXPORTED = "exported"
 

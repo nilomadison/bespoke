@@ -51,7 +51,7 @@ def test_analyze_bad_json_raises():
         async def close(self):
             pass
 
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         asyncio.run(analyze_job_description(BadClient(), "jd"))
 
 

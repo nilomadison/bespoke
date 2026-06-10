@@ -1,4 +1,5 @@
 """Tests for src.tailor.resolver.resolve_items_for_display."""
+
 from datetime import date
 
 import pytest
@@ -10,10 +11,10 @@ from src.models.project import Project
 from src.models.tailoring import PlanItem, PlanItemType, TailoringSession, TailoringStatus
 from src.tailor.resolver import resolve_items_for_display
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def session(db_session) -> TailoringSession:
@@ -101,6 +102,7 @@ def _make_item(db_session, session_id, item_type, reference_id, include=True, so
 # Basic resolution
 # ---------------------------------------------------------------------------
 
+
 def test_empty_items_returns_empty(db_session):
     result = resolve_items_for_display([], db_session)
     assert result == []
@@ -186,11 +188,20 @@ def test_skill_group_without_note_defaults_to_skills(db_session, session):
 # Result structure
 # ---------------------------------------------------------------------------
 
+
 def test_result_has_required_keys(db_session, session, job):
     item = _make_item(db_session, session.id, PlanItemType.JOB, job.id)
     result = resolve_items_for_display([item], db_session)
     r = result[0]
-    assert set(r.keys()) >= {"id", "type", "reference_id", "include", "text", "rationale", "emphasis_note"}
+    assert set(r.keys()) >= {
+        "id",
+        "type",
+        "reference_id",
+        "include",
+        "text",
+        "rationale",
+        "emphasis_note",
+    }
 
 
 def test_include_flag_preserved(db_session, session, job):
@@ -209,10 +220,13 @@ def test_rationale_preserved(db_session, session, job):
 # Ordering and multi-item
 # ---------------------------------------------------------------------------
 
+
 def test_items_sorted_by_sort_order(db_session, session, job, achievement, project):
     item_b = _make_item(db_session, session.id, PlanItemType.JOB, job.id, sort_order=2)
     item_a = _make_item(db_session, session.id, PlanItemType.PROJECT, project.id, sort_order=0)
-    item_c = _make_item(db_session, session.id, PlanItemType.ACHIEVEMENT, achievement.id, sort_order=1)
+    item_c = _make_item(
+        db_session, session.id, PlanItemType.ACHIEVEMENT, achievement.id, sort_order=1
+    )
 
     result = resolve_items_for_display([item_b, item_a, item_c], db_session)
     assert result[0]["id"] == item_a.id
@@ -238,6 +252,7 @@ def test_batch_load_no_n_plus_one(db_session, session, job):
 # ---------------------------------------------------------------------------
 # Missing reference (soft FK — record was deleted)
 # ---------------------------------------------------------------------------
+
 
 def test_missing_reference_id_returns_none_text(db_session, session):
     item = PlanItem(

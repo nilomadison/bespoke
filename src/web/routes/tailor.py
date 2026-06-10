@@ -118,9 +118,7 @@ def tailor_index(request: Request, db: Session = Depends(get_session)):
     sessions = db.scalars(
         select(TailoringSession).order_by(TailoringSession.created_at.desc())
     ).all()
-    return templates.TemplateResponse(
-        request, "tailor/index.html", {"sessions": sessions}
-    )
+    return templates.TemplateResponse(request, "tailor/index.html", {"sessions": sessions})
 
 
 @router.get("/new", response_class=HTMLResponse)
@@ -179,9 +177,7 @@ def get_status(session_id: int, request: Request, db: Session = Depends(get_sess
         )
 
     # ANALYZING or GENERATING — return spinner that re-polls
-    return templates.TemplateResponse(
-        request, "tailor/_status_spinner.html", {"session": session}
-    )
+    return templates.TemplateResponse(request, "tailor/_status_spinner.html", {"session": session})
 
 
 @router.get("/{session_id}/plan", response_class=HTMLResponse)
@@ -217,7 +213,9 @@ def toggle_plan_item(
     db.commit()
     db.refresh(item)
     return templates.TemplateResponse(
-        request, "tailor/_plan_item.html", {"item": item, "session_id": session_id, "label": _get_item_label(item, db)}
+        request,
+        "tailor/_plan_item.html",
+        {"item": item, "session_id": session_id, "label": _get_item_label(item, db)},
     )
 
 
@@ -239,7 +237,9 @@ def update_plan_item_note(
     db.commit()
     db.refresh(item)
     return templates.TemplateResponse(
-        request, "tailor/_plan_item.html", {"item": item, "session_id": session_id, "label": _get_item_label(item, db)}
+        request,
+        "tailor/_plan_item.html",
+        {"item": item, "session_id": session_id, "label": _get_item_label(item, db)},
     )
 
 
@@ -263,16 +263,31 @@ def plan_add_picker(
         if item.reference_id is not None:
             used[item.item_type].add(item.reference_id)
 
-    jobs = [j for j in db.scalars(select(Job).order_by(Job.sort_order, Job.id)).all()
-            if j.id not in used[PlanItemType.JOB]]
-    achievements = [a for a in db.scalars(select(Achievement).order_by(Achievement.id)).all()
-                    if a.id not in used[PlanItemType.ACHIEVEMENT]]
-    projects = [p for p in db.scalars(select(Project).order_by(Project.id)).all()
-                if p.id not in used[PlanItemType.PROJECT]]
-    educations = [e for e in db.scalars(select(Education).order_by(Education.id)).all()
-                  if e.id not in used[PlanItemType.EDUCATION]]
-    certifications = [c for c in db.scalars(select(Certification).order_by(Certification.id)).all()
-                      if c.id not in used[PlanItemType.CERTIFICATION]]
+    jobs = [
+        j
+        for j in db.scalars(select(Job).order_by(Job.sort_order, Job.id)).all()
+        if j.id not in used[PlanItemType.JOB]
+    ]
+    achievements = [
+        a
+        for a in db.scalars(select(Achievement).order_by(Achievement.id)).all()
+        if a.id not in used[PlanItemType.ACHIEVEMENT]
+    ]
+    projects = [
+        p
+        for p in db.scalars(select(Project).order_by(Project.id)).all()
+        if p.id not in used[PlanItemType.PROJECT]
+    ]
+    educations = [
+        e
+        for e in db.scalars(select(Education).order_by(Education.id)).all()
+        if e.id not in used[PlanItemType.EDUCATION]
+    ]
+    certifications = [
+        c
+        for c in db.scalars(select(Certification).order_by(Certification.id)).all()
+        if c.id not in used[PlanItemType.CERTIFICATION]
+    ]
     skills = db.scalars(select(Skill).order_by(Skill.name)).all()
 
     return templates.TemplateResponse(
@@ -318,7 +333,9 @@ def plan_add_item(
     # All other types require a valid reference_id pointing to an existing record.
     if type_enum == PlanItemType.SKILL_GROUP:
         if not note:
-            return HTMLResponse(content="emphasis_note is required for skill_group", status_code=400)
+            return HTMLResponse(
+                content="emphasis_note is required for skill_group", status_code=400
+            )
         ref_id = None
     else:
         if reference_id is None:
@@ -375,9 +392,7 @@ async def reorder_plan_items(
     if session is None:
         return Response(content="Not found", status_code=404)
 
-    items = db.scalars(
-        select(PlanItem).where(PlanItem.session_id == session_id)
-    ).all()
+    items = db.scalars(select(PlanItem).where(PlanItem.session_id == session_id)).all()
     item_map = {i.id: i for i in items}
 
     if set(new_order) != set(item_map.keys()):
@@ -779,9 +794,7 @@ def view_cover_letter(session_id: int, request: Request, db: Session = Depends(g
     session = db.get(TailoringSession, session_id)
     if session is None:
         return HTMLResponse(content="Not found", status_code=404)
-    return templates.TemplateResponse(
-        request, "tailor/cover_letter.html", {"session": session}
-    )
+    return templates.TemplateResponse(request, "tailor/cover_letter.html", {"session": session})
 
 
 @router.get("/{session_id}/cover-letter/status", response_class=HTMLResponse)

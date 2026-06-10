@@ -27,12 +27,8 @@ def serialize_career(db: Session) -> dict:
     ).all()
 
     skills = db.scalars(select(Skill).order_by(Skill.category, Skill.name)).all()
-    projects = db.scalars(
-        select(Project).order_by(Project.prominence.desc(), Project.name)
-    ).all()
-    education = db.scalars(
-        select(Education).order_by(Education.end_date.desc())
-    ).all()
+    projects = db.scalars(select(Project).order_by(Project.prominence.desc(), Project.name)).all()
+    education = db.scalars(select(Education).order_by(Education.end_date.desc())).all()
     certifications = db.scalars(
         select(Certification).order_by(Certification.issue_date.desc())
     ).all()
@@ -61,9 +57,7 @@ def serialize_career(db: Session) -> dict:
             }
             for j in jobs
         ],
-        "skills": [
-            {"id": s.id, "name": s.name, "category": s.category} for s in skills
-        ],
+        "skills": [{"id": s.id, "name": s.name, "category": s.category} for s in skills],
         "projects": [
             {
                 "id": p.id,
@@ -146,15 +140,11 @@ async def build_plan(
     plan_data = parse_llm_json(raw, "plan")
 
     valid_ids: dict[str, set[int]] = {
-        "job":           {j["id"] for j in career_context["jobs"]},
-        "achievement":   {
-            a["id"]
-            for j in career_context["jobs"]
-            for a in j["achievements"]
-        },
-        "skill_group":   set(),
-        "project":       {p["id"] for p in career_context["projects"]},
-        "education":     {e["id"] for e in career_context["education"]},
+        "job": {j["id"] for j in career_context["jobs"]},
+        "achievement": {a["id"] for j in career_context["jobs"] for a in j["achievements"]},
+        "skill_group": set(),
+        "project": {p["id"] for p in career_context["projects"]},
+        "education": {e["id"] for e in career_context["education"]},
         "certification": {c["id"] for c in career_context["certifications"]},
     }
 

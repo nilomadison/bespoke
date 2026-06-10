@@ -14,6 +14,7 @@ from src.tailor.planner import build_plan, serialize_career
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def make_session(db) -> TailoringSession:
     s = TailoringSession(
         job_title="Senior Engineer",
@@ -84,9 +85,11 @@ def seed_career(db) -> Job:
     db.commit()
     return job
 
+
 # ---------------------------------------------------------------------------
 # serialize_career
 # ---------------------------------------------------------------------------
+
 
 def test_serialize_career_empty_db(db_session):
     result = serialize_career(db_session)
@@ -114,6 +117,7 @@ def test_serialize_career_with_education(db_session):
 # ---------------------------------------------------------------------------
 # build_plan
 # ---------------------------------------------------------------------------
+
 
 def test_build_plan_returns_plan_items(db_session):
     seed_career(db_session)

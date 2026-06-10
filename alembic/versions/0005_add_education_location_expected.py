@@ -7,15 +7,17 @@ Revises: 0004_add_cover_letter
 Create Date: 2026-05-04
 
 """
-from typing import Sequence, Union
+
+from collections.abc import Sequence
 
 import sqlalchemy as sa
+
 from alembic import op
 
 revision: str = "0005_add_education_location_expected"
-down_revision: Union[str, Sequence[str], None] = "0004_add_cover_letter"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | Sequence[str] | None = "0004_add_cover_letter"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:

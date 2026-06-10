@@ -25,6 +25,7 @@ def test_update_profile(client, db_session):
 
     db_session.expire_all()
     from src.models.profile import Profile
+
     profile = db_session.get(Profile, 1)
     assert profile.full_name == "Jane Smith"
     assert profile.phone == "555-1234"

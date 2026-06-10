@@ -1,7 +1,6 @@
 """Tests for src.tailor.scorer.compute_match_score."""
-from datetime import date
 
-import pytest
+from datetime import date
 
 from src.models.job import Job
 from src.models.skill import Skill
@@ -12,10 +11,10 @@ from src.tailor.scorer import (
     compute_match_score,
 )
 
-
 # ---------------------------------------------------------------------------
 # SkillCoverage helpers
 # ---------------------------------------------------------------------------
+
 
 def test_skill_coverage_pct_all_matched():
     cov = SkillCoverage(matched=["Python", "Go"], missing=[])
@@ -40,6 +39,7 @@ def test_skill_coverage_pct_empty_is_100():
 # ---------------------------------------------------------------------------
 # _skill_matches
 # ---------------------------------------------------------------------------
+
 
 def test_skill_matches_exact():
     assert _skill_matches({"python"}, "Python") is True
@@ -66,6 +66,7 @@ def test_skill_matches_empty_candidates():
 # ---------------------------------------------------------------------------
 # compute_match_score — skill matching
 # ---------------------------------------------------------------------------
+
 
 def _add_skills(db_session, names: list[str]) -> None:
     for name in names:
@@ -160,6 +161,7 @@ def test_no_skills_in_db(db_session):
 # compute_match_score — role level notes
 # ---------------------------------------------------------------------------
 
+
 def test_no_role_level_produces_no_note(db_session):
     _add_job(db_session, "Senior Engineer")
     analysis = {"required_skills": [], "preferred_skills": [], "role_level": "", "domain": ""}
@@ -179,7 +181,12 @@ def test_over_leveled_note(db_session):
 def test_under_leveled_note(db_session):
     # candidate is junior (rank 1), JD wants principal (rank 5) → gap > 1
     _add_job(db_session, "Junior Developer")
-    analysis = {"required_skills": [], "preferred_skills": [], "role_level": "principal", "domain": ""}
+    analysis = {
+        "required_skills": [],
+        "preferred_skills": [],
+        "role_level": "principal",
+        "domain": "",
+    }
     score = compute_match_score(analysis, db_session)
     assert score.role_level_note is not None
     assert "principal" in score.role_level_note.lower()
@@ -203,23 +210,39 @@ def test_no_jobs_in_db_produces_no_note(db_session):
 # compute_match_score — domain match
 # ---------------------------------------------------------------------------
 
+
 def test_technical_domain_matches_with_technical_job(db_session):
     _add_job(db_session, "Backend Engineer", is_technical=True)
-    analysis = {"required_skills": [], "preferred_skills": [], "role_level": "", "domain": "backend"}
+    analysis = {
+        "required_skills": [],
+        "preferred_skills": [],
+        "role_level": "",
+        "domain": "backend",
+    }
     score = compute_match_score(analysis, db_session)
     assert score.domain_match is True
 
 
 def test_technical_domain_no_match_without_technical_job(db_session):
     _add_job(db_session, "Project Manager", is_technical=False)
-    analysis = {"required_skills": [], "preferred_skills": [], "role_level": "", "domain": "backend"}
+    analysis = {
+        "required_skills": [],
+        "preferred_skills": [],
+        "role_level": "",
+        "domain": "backend",
+    }
     score = compute_match_score(analysis, db_session)
     assert score.domain_match is False
 
 
 def test_non_technical_domain_always_matches(db_session):
     _add_job(db_session, "Project Manager", is_technical=False)
-    analysis = {"required_skills": [], "preferred_skills": [], "role_level": "", "domain": "marketing"}
+    analysis = {
+        "required_skills": [],
+        "preferred_skills": [],
+        "role_level": "",
+        "domain": "marketing",
+    }
     score = compute_match_score(analysis, db_session)
     assert score.domain_match is True
 
@@ -233,6 +256,7 @@ def test_empty_domain_always_matches(db_session):
 # ---------------------------------------------------------------------------
 # Return type
 # ---------------------------------------------------------------------------
+
 
 def test_returns_match_score_instance(db_session):
     analysis = {"required_skills": [], "preferred_skills": [], "role_level": "", "domain": ""}

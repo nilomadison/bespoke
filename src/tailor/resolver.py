@@ -1,4 +1,5 @@
 """Resolve PlanItem soft-FKs to display-friendly dicts for UI rendering."""
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -20,16 +21,49 @@ def resolve_items_for_display(items: list[PlanItem], db: Session) -> list[dict]:
 
     # Batch-load all referenced records to avoid N+1 queries
     job_ids = [i.reference_id for i in items if i.item_type == PlanItemType.JOB and i.reference_id]
-    ach_ids = [i.reference_id for i in items if i.item_type == PlanItemType.ACHIEVEMENT and i.reference_id]
-    proj_ids = [i.reference_id for i in items if i.item_type == PlanItemType.PROJECT and i.reference_id]
-    edu_ids = [i.reference_id for i in items if i.item_type == PlanItemType.EDUCATION and i.reference_id]
-    cert_ids = [i.reference_id for i in items if i.item_type == PlanItemType.CERTIFICATION and i.reference_id]
+    ach_ids = [
+        i.reference_id for i in items if i.item_type == PlanItemType.ACHIEVEMENT and i.reference_id
+    ]
+    proj_ids = [
+        i.reference_id for i in items if i.item_type == PlanItemType.PROJECT and i.reference_id
+    ]
+    edu_ids = [
+        i.reference_id for i in items if i.item_type == PlanItemType.EDUCATION and i.reference_id
+    ]
+    cert_ids = [
+        i.reference_id
+        for i in items
+        if i.item_type == PlanItemType.CERTIFICATION and i.reference_id
+    ]
 
-    jobs = {j.id: j for j in db.scalars(select(Job).where(Job.id.in_(job_ids))).all()} if job_ids else {}
-    achs = {a.id: a for a in db.scalars(select(Achievement).where(Achievement.id.in_(ach_ids))).all()} if ach_ids else {}
-    projs = {p.id: p for p in db.scalars(select(Project).where(Project.id.in_(proj_ids))).all()} if proj_ids else {}
-    edus = {e.id: e for e in db.scalars(select(Education).where(Education.id.in_(edu_ids))).all()} if edu_ids else {}
-    certs = {c.id: c for c in db.scalars(select(Certification).where(Certification.id.in_(cert_ids))).all()} if cert_ids else {}
+    jobs = (
+        {j.id: j for j in db.scalars(select(Job).where(Job.id.in_(job_ids))).all()}
+        if job_ids
+        else {}
+    )
+    achs = (
+        {a.id: a for a in db.scalars(select(Achievement).where(Achievement.id.in_(ach_ids))).all()}
+        if ach_ids
+        else {}
+    )
+    projs = (
+        {p.id: p for p in db.scalars(select(Project).where(Project.id.in_(proj_ids))).all()}
+        if proj_ids
+        else {}
+    )
+    edus = (
+        {e.id: e for e in db.scalars(select(Education).where(Education.id.in_(edu_ids))).all()}
+        if edu_ids
+        else {}
+    )
+    certs = (
+        {
+            c.id: c
+            for c in db.scalars(select(Certification).where(Certification.id.in_(cert_ids))).all()
+        }
+        if cert_ids
+        else {}
+    )
 
     resolved = []
     for item in sorted(items, key=lambda i: i.sort_order):
@@ -59,14 +93,16 @@ def resolve_items_for_display(items: list[PlanItem], db: Session) -> list[dict]:
             if cert:
                 text = f"{cert.name} ({cert.issuer})"
 
-        resolved.append({
-            "id": item.id,
-            "type": item.item_type.value,
-            "reference_id": item.reference_id,
-            "include": item.include,
-            "text": text,
-            "rationale": item.llm_rationale,
-            "emphasis_note": item.emphasis_note,
-        })
+        resolved.append(
+            {
+                "id": item.id,
+                "type": item.item_type.value,
+                "reference_id": item.reference_id,
+                "include": item.include,
+                "text": text,
+                "rationale": item.llm_rationale,
+                "emphasis_note": item.emphasis_note,
+            }
+        )
 
     return resolved

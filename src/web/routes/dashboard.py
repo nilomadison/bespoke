@@ -19,9 +19,7 @@ router = APIRouter(tags=["dashboard"])
 @router.get("/", response_class=HTMLResponse)
 def dashboard(request: Request, db: Session = Depends(get_session)):
     recent = db.scalars(
-        select(TailoringSession)
-        .order_by(TailoringSession.created_at.desc())
-        .limit(5)
+        select(TailoringSession).order_by(TailoringSession.created_at.desc()).limit(5)
     ).all()
 
     sessions_view = []
@@ -43,8 +41,7 @@ def dashboard(request: Request, db: Session = Depends(get_session)):
     profile_warning = None
     if profile is None or not profile.full_name or not profile.email:
         profile_warning = (
-            "Your profile is missing contact info — "
-            "generated resumes won't have a header."
+            "Your profile is missing contact info — " "generated resumes won't have a header."
         )
 
     return templates.TemplateResponse(

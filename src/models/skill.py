@@ -20,7 +20,9 @@ class JobSkill(Base):
 
     job_id: Mapped[int] = mapped_column(ForeignKey("job.id"), primary_key=True)
     skill_id: Mapped[int] = mapped_column(ForeignKey("skill.id"), primary_key=True)
-    proficiency: Mapped[str | None] = mapped_column(String(50))  # "expert", "proficient", "familiar"
+    proficiency: Mapped[str | None] = mapped_column(
+        String(50)
+    )  # "expert", "proficient", "familiar"
     years_used: Mapped[float | None] = mapped_column(Float)
 
     job: Mapped["Job"] = relationship(back_populates="job_skills")  # noqa: F821

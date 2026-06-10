@@ -65,7 +65,8 @@ def resolve_plan_items(session: TailoringSession, db: Session) -> dict:
         job_plan_item = job_plan_items.get(job_id)
 
         selected_achievements = [
-            i for i in ach_plan_items
+            i
+            for i in ach_plan_items
             if i.reference_id in achievements_by_id
             and achievements_by_id[i.reference_id].job_id == job_id
         ]
@@ -109,8 +110,7 @@ def resolve_plan_items(session: TailoringSession, db: Session) -> dict:
     if proj_plan_items:
         proj_ids = [i.reference_id for i in proj_plan_items if i.reference_id]
         projs_by_id = {
-            p.id: p
-            for p in db.scalars(select(Project).where(Project.id.in_(proj_ids))).all()
+            p.id: p for p in db.scalars(select(Project).where(Project.id.in_(proj_ids))).all()
         }
         for pitem in proj_plan_items:
             proj = projs_by_id.get(pitem.reference_id)
@@ -128,8 +128,7 @@ def resolve_plan_items(session: TailoringSession, db: Session) -> dict:
     if edu_plan_items:
         edu_ids = [i.reference_id for i in edu_plan_items if i.reference_id]
         edus_by_id = {
-            e.id: e
-            for e in db.scalars(select(Education).where(Education.id.in_(edu_ids))).all()
+            e.id: e for e in db.scalars(select(Education).where(Education.id.in_(edu_ids))).all()
         }
         for eitem in edu_plan_items:
             edu = edus_by_id.get(eitem.reference_id)

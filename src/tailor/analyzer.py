@@ -9,16 +9,33 @@ from src.llm.prompt_loader import load_prompt
 
 logger = logging.getLogger(__name__)
 
-VALID_ROLE_LEVELS = frozenset({
-    "junior", "mid", "senior", "staff", "lead", "principal", "manager", "director"
-})
+VALID_ROLE_LEVELS = frozenset(
+    {"junior", "mid", "senior", "staff", "lead", "principal", "manager", "director"}
+)
 
-VALID_IMPACT_SIGNALS = frozenset({
-    "scale", "reliability", "speed", "cost_reduction", "revenue",
-    "developer_experience", "leadership", "mentorship", "architecture",
-    "security", "data", "ml", "product", "ux", "cross_functional",
-    "communication", "ownership", "scrappiness", "research",
-})
+VALID_IMPACT_SIGNALS = frozenset(
+    {
+        "scale",
+        "reliability",
+        "speed",
+        "cost_reduction",
+        "revenue",
+        "developer_experience",
+        "leadership",
+        "mentorship",
+        "architecture",
+        "security",
+        "data",
+        "ml",
+        "product",
+        "ux",
+        "cross_functional",
+        "communication",
+        "ownership",
+        "scrappiness",
+        "research",
+    }
+)
 
 
 @dataclass
@@ -36,6 +53,7 @@ class JobAnalysis:
 def _strip_fences(raw: str) -> str:
     """Backward-compat shim — tests import this directly. Use parse_llm_json for new code."""
     import re
+
     s = raw.strip()
     s = re.sub(r"^```[a-zA-Z]*\n?", "", s)
     if s.endswith("```"):

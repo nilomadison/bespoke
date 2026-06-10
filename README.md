@@ -1,6 +1,15 @@
 # Bespoke
 
-A local-first resume tailoring tool that treats your career history as a structured database and uses a two-stage LLM pipeline to generate tailored resumes. The LLM selects and rewrites real achievements from your database — it never invents experience or fabricates metrics.
+A local-first resume tailoring tool that treats your career history as a structured database and uses a three-stage LLM pipeline to generate tailored resumes. The LLM selects and rewrites real achievements from your database — it never invents experience or fabricates metrics.
+
+## Features
+
+- **No fabrication, by construction.** The generator only sees data hydrated from rows in your career database — it literally cannot cite an achievement, metric, or employer that isn't there. Enforced by traceability tests, not just prompt instructions.
+- **Human-in-the-loop plan review.** Generation is gated on a review step where you toggle, reorder, annotate, and add the items the LLM selected. Hallucinated or mis-scored picks get caught before any prose is written.
+- **Versioned prompts with a compare CLI.** Every LLM stage records the `sha256[:12]` hash of the prompt that produced its output, so you can A/B prompt changes across sessions with `prompt_compare`.
+- **Local-first.** SQLite on your disk. No accounts, no cloud sync, no telemetry.
+- **Keyless demo mode.** `BESPOKE_MOCK_LLM=1` runs the full pipeline on fixture responses — no API key needed.
+- **ATS-friendly exports.** Single-column `.docx` and `.pdf` renderers (no tables, no text boxes), with inline post-generation editing that flows straight into both.
 
 ## How it works
 
@@ -12,9 +21,15 @@ A local-first resume tailoring tool that treats your career history as a structu
 
 All LLM outputs are versioned by prompt hash (`sha256[:12]`) and stored in SQLite for later comparison.
 
+## Screenshots
+
+| Plan review | Generated resume | Cover letter |
+|---|---|---|
+| ![Plan review](docs/screenshots/plan-review.png) | ![Result](docs/screenshots/result.png) | ![Cover letter](docs/screenshots/cover-letter.png) |
+
 ## Setup (under 60 seconds)
 
-**Prerequisites:** Python 3.11+, an [OpenRouter](https://openrouter.ai) API key.
+**Prerequisites:** Python 3.11+, and an [OpenRouter](https://openrouter.ai) API key (create one at [openrouter.ai/keys](https://openrouter.ai/keys)) — or skip the key entirely and use mock mode (see [Development](#development)).
 
 ```bash
 git clone https://github.com/YOUR_USERNAME/bespoke.git
@@ -46,6 +61,19 @@ uvicorn src.web.app:app --reload
 ```
 
 Open [http://localhost:8000](http://localhost:8000). The home dashboard shows recent sessions and a **Start a new tailoring** button — paste a job description and go.
+
+### Environment variables
+
+All config is read from the environment (or `.env`) in `src/config.py`:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `OPENROUTER_API_KEY` | _(empty)_ | Required for real LLM calls. Get one at [openrouter.ai/keys](https://openrouter.ai/keys). |
+| `BESPOKE_MOCK_LLM` | `false` | Set to `1` to run the whole pipeline on fixture responses — no API key needed. |
+| `DEFAULT_MODEL` | `anthropic/claude-sonnet-4-6` | OpenRouter model id used for all stages. |
+| `OPENROUTER_BASE_URL` | `https://openrouter.ai/api/v1` | Override only if proxying. |
+| `DATA_DIR` | `data` | Where `bespoke.db` lives. |
+| `DB_ECHO` | `false` | Set to `true` to log SQL (debugging). |
 
 ## Development
 
@@ -111,9 +139,10 @@ python -m src.tools.prompt_compare list
 python -m src.tools.prompt_compare analyze <session_id_a> <session_id_b>
 python -m src.tools.prompt_compare plan    <session_id_a> <session_id_b>
 python -m src.tools.prompt_compare generate <session_id_a> <session_id_b>
+python -m src.tools.prompt_compare cover_letter <session_id_a> <session_id_b>
 ```
 
-Each mode compares the meaningful thing for that stage: field-by-field analysis diff, plan item additions/drops, and experience bullet changes.
+Each mode compares the meaningful thing for that stage: field-by-field analysis diff, plan item additions/drops, experience bullet changes, and cover-letter paragraph diffs.
 
 ## Design notes
 
@@ -125,3 +154,7 @@ Each mode compares the meaningful thing for that stage: field-by-field analysis 
 ## AI Assistance
 This project was developed with assistance from AI coding tools Claude Code.
 - Refer to [CLAUDE.md](CLAUDE.md) for repository-specific guidelines, commands, and architecture notes.
+
+## License
+
+MIT — see [LICENSE](LICENSE).

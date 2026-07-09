@@ -2,6 +2,13 @@ import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+# Load variables from a local .env into the process environment before Settings
+# reads them. Called at import time so every entry point (web server, seed CLI,
+# alembic, prompt_compare, tests) picks up .env, not just uvicorn.
+load_dotenv()
+
 
 @dataclass
 class Settings:

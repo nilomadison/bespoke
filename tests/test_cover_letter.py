@@ -32,7 +32,6 @@ def make_generated_session(db) -> TailoringSession:
         job_id=job.id,
         text="Scaled the API gateway to 500M requests per day",
         metric="reduced latency by 40%",
-        prominence=5,
     )
     db.add(ach)
     db.commit()

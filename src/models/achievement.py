@@ -16,8 +16,6 @@ class Achievement(Base, TimestampMixin):
     # JSON list of strings e.g. ["cost_reduction", "leadership", "scale"]
     impact_tags: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
 
-    # 1=weak, 2=minor, 3=solid, 4=strong, 5=flagship
-    prominence: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
     sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     job: Mapped["Job"] = relationship(back_populates="achievements")  # noqa: F821

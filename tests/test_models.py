@@ -36,7 +36,7 @@ def test_job_cascade_delete_achievements(db_session):
     )
     db_session.add(job)
     db_session.commit()
-    ach = Achievement(job_id=job.id, text="Did X", impact_tags=[], prominence=3, sort_order=0)
+    ach = Achievement(job_id=job.id, text="Did X", impact_tags=[], sort_order=0)
     db_session.add(ach)
     db_session.commit()
     ach_id = ach.id
@@ -76,12 +76,11 @@ def test_certification_model(db_session):
 
 
 def test_project_optional_job_link(db_session):
-    project = Project(name="Bespoke", summary="Resume tool", is_active=True, prominence=5)
+    project = Project(name="Bespoke", summary="Resume tool", is_active=True)
     db_session.add(project)
     db_session.commit()
     result = db_session.get(Project, project.id)
     assert result.job_id is None
-    assert result.prominence == 5
 
 
 def test_achievement_impact_tags_json(db_session):
@@ -97,7 +96,6 @@ def test_achievement_impact_tags_json(db_session):
         job_id=job.id,
         text="Did something",
         impact_tags=["scale", "cost_reduction", "leadership"],
-        prominence=4,
         sort_order=0,
     )
     db_session.add(ach)

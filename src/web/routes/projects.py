@@ -15,7 +15,7 @@ router = APIRouter(prefix="/projects", tags=["projects"])
 
 @router.get("/", response_class=HTMLResponse)
 def list_projects(request: Request, db: Session = Depends(get_session)):
-    projects = db.scalars(select(Project).order_by(Project.prominence.desc(), Project.name)).all()
+    projects = db.scalars(select(Project).order_by(Project.is_active.desc(), Project.name)).all()
     jobs = db.scalars(select(Job).order_by(Job.start_date.desc())).all()
     return templates.TemplateResponse(
         request, "projects/list.html", {"request": request, "projects": projects, "jobs": jobs}
@@ -42,7 +42,6 @@ def create_project(
     start_date: str = Form(""),
     end_date: str = Form(""),
     is_active: str = Form("off"),
-    prominence: int = Form(3),
     job_id: str = Form(""),
 ):
     project = Project(
@@ -54,7 +53,6 @@ def create_project(
         start_date=date.fromisoformat(start_date) if start_date else None,
         end_date=date.fromisoformat(end_date) if end_date else None,
         is_active=is_active == "on",
-        prominence=prominence,
         job_id=int(job_id) if job_id else None,
     )
     db.add(project)
@@ -86,7 +84,6 @@ def update_project(
     start_date: str = Form(""),
     end_date: str = Form(""),
     is_active: str = Form("off"),
-    prominence: int = Form(3),
     job_id: str = Form(""),
 ):
     project = db.get(Project, project_id)
@@ -100,7 +97,6 @@ def update_project(
     project.start_date = date.fromisoformat(start_date) if start_date else None
     project.end_date = date.fromisoformat(end_date) if end_date else None
     project.is_active = is_active == "on"
-    project.prominence = prominence
     project.job_id = int(job_id) if job_id else None
     db.commit()
     return RedirectResponse(url="/projects/", status_code=303)

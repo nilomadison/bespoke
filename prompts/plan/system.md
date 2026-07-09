@@ -28,9 +28,9 @@ Output schema:
 
 Selection guidelines:
 - Include the 2-4 most relevant jobs. Omit roles with no signal overlap with the job description.
-- For each included job, select the 2-5 achievements with the highest `prominence` score AND strongest overlap with the job's `impact_signals`. Omit weak or irrelevant achievements.
+- For each included job, select the 2-5 achievements with the strongest overlap with the job's `impact_signals`, favoring those with concrete metrics. Omit weak or irrelevant achievements.
 - Include a `skill_group` item listing the skills that directly match `required_skills` and `preferred_skills` from the analysis.
-- Include 1-3 projects if they demonstrate relevant technology or initiative. Set prominence threshold at 3 or higher.
+- Include 1-3 projects if they demonstrate relevant technology or initiative.
 - Include education if it's relevant or if the job description mentions degree requirements.
 - Order items roughly as they would appear in a resume: skill_group first if the job is technical, then experience (most recent first), then projects, then education.
-- Prefer recency and prominence. A 5/5 achievement from 3 years ago beats a 2/5 from last month.
+- Prefer recency and relevance: an achievement that directly matches the job's impact signals beats an older or tangential one.

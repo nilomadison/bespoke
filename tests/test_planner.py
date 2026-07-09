@@ -54,7 +54,7 @@ def make_education(db) -> Education:
 
 
 def make_project(db) -> Project:
-    p = Project(name="Side Project", summary="A side project.", prominence=4)
+    p = Project(name="Side Project", summary="A side project.")
     db.add(p)
     db.commit()
     db.refresh(p)
@@ -77,8 +77,8 @@ def seed_career(db) -> Job:
     record of each type gets id=1.
     """
     job = make_job(db)
-    ach1 = Achievement(job_id=job.id, text="First achievement", prominence=5)
-    ach2 = Achievement(job_id=job.id, text="Second achievement", prominence=4)
+    ach1 = Achievement(job_id=job.id, text="First achievement")
+    ach2 = Achievement(job_id=job.id, text="Second achievement")
     db.add_all([ach1, ach2])
     make_education(db)
     make_project(db)

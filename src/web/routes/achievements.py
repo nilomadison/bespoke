@@ -38,7 +38,6 @@ def create_achievement(
     text: str = Form(...),
     metric: str = Form(""),
     impact_tags: str = Form(""),
-    prominence: int = Form(3),
     sort_order: int = Form(0),
 ):
     tags = [t.strip() for t in impact_tags.split(",") if t.strip()]
@@ -47,7 +46,6 @@ def create_achievement(
         text=text,
         metric=metric or None,
         impact_tags=tags,
-        prominence=prominence,
         sort_order=sort_order,
     )
     db.add(achievement)
@@ -91,7 +89,6 @@ def update_achievement(
     text: str = Form(...),
     metric: str = Form(""),
     impact_tags: str = Form(""),
-    prominence: int = Form(3),
     sort_order: int = Form(0),
 ):
     achievement = db.get(Achievement, achievement_id)
@@ -100,7 +97,6 @@ def update_achievement(
     achievement.text = text
     achievement.metric = metric or None
     achievement.impact_tags = [t.strip() for t in impact_tags.split(",") if t.strip()]
-    achievement.prominence = prominence
     achievement.sort_order = sort_order
     db.commit()
     db.refresh(achievement)

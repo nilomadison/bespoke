@@ -111,7 +111,6 @@ def seed(seed_file: Path) -> None:
                         text=ach["text"],
                         metric=ach.get("metric"),
                         impact_tags=tags,
-                        prominence=ach.get("prominence", 3),
                         sort_order=idx,
                     )
                 )
@@ -193,7 +192,6 @@ def seed(seed_file: Path) -> None:
             p.start_date = _date(proj.get("start_date"))
             p.end_date = _date(proj.get("end_date"))
             p.is_active = proj.get("is_active", False)
-            p.prominence = proj.get("prominence", 3)
             # Optional `job:` reference links the project to a specific job by
             # (company, title). If the lookup misses, leave job_id null and warn.
             job_ref = proj.get("job")

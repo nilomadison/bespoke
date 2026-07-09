@@ -1,6 +1,6 @@
 from datetime import date
 
-from sqlalchemy import Boolean, Date, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, Date, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base, TimestampMixin
@@ -20,7 +20,6 @@ class Project(Base, TimestampMixin):
     start_date: Mapped[date | None] = mapped_column(Date)
     end_date: Mapped[date | None] = mapped_column(Date)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    prominence: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
 
     job: Mapped["Job | None"] = relationship(back_populates="projects")  # noqa: F821
     project_skills: Mapped[list["ProjectSkill"]] = relationship(

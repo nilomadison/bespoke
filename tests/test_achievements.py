@@ -25,7 +25,6 @@ def test_create_achievement_returns_row_fragment(client, db_session):
             "text": "Reduced latency by 40%",
             "metric": "40% improvement",
             "impact_tags": "scale, reliability",
-            "prominence": "4",
             "sort_order": "0",
         },
     )
@@ -43,7 +42,6 @@ def test_achievement_persists_with_tags(client, db_session):
             "text": "Led migration project",
             "metric": "",
             "impact_tags": "leadership, architecture",
-            "prominence": "5",
             "sort_order": "0",
         },
     )
@@ -53,14 +51,11 @@ def test_achievement_persists_with_tags(client, db_session):
     assert ach.text == "Led migration project"
     assert "leadership" in ach.impact_tags
     assert "architecture" in ach.impact_tags
-    assert ach.prominence == 5
 
 
 def test_get_achievement_row(client, db_session):
     job = _setup(db_session)
-    ach = Achievement(
-        job_id=job.id, text="Did something", impact_tags=["scale"], prominence=3, sort_order=0
-    )
+    ach = Achievement(job_id=job.id, text="Did something", impact_tags=["scale"], sort_order=0)
     db_session.add(ach)
     db_session.commit()
     db_session.refresh(ach)
@@ -72,9 +67,7 @@ def test_get_achievement_row(client, db_session):
 
 def test_edit_achievement_form(client, db_session):
     job = _setup(db_session)
-    ach = Achievement(
-        job_id=job.id, text="Built a feature", impact_tags=[], prominence=3, sort_order=0
-    )
+    ach = Achievement(job_id=job.id, text="Built a feature", impact_tags=[], sort_order=0)
     db_session.add(ach)
     db_session.commit()
     db_session.refresh(ach)
@@ -87,9 +80,7 @@ def test_edit_achievement_form(client, db_session):
 
 def test_update_achievement(client, db_session):
     job = _setup(db_session)
-    ach = Achievement(
-        job_id=job.id, text="Old text", impact_tags=["cost"], prominence=2, sort_order=0
-    )
+    ach = Achievement(job_id=job.id, text="Old text", impact_tags=["cost"], sort_order=0)
     db_session.add(ach)
     db_session.commit()
     db_session.refresh(ach)
@@ -100,7 +91,6 @@ def test_update_achievement(client, db_session):
             "text": "New text",
             "metric": "Saved $1M",
             "impact_tags": "cost_reduction",
-            "prominence": "5",
             "sort_order": "0",
         },
     )
@@ -109,12 +99,11 @@ def test_update_achievement(client, db_session):
     db_session.expire_all()
     updated = db_session.get(Achievement, ach.id)
     assert updated.text == "New text"
-    assert updated.prominence == 5
 
 
 def test_delete_achievement(client, db_session):
     job = _setup(db_session)
-    ach = Achievement(job_id=job.id, text="To delete", impact_tags=[], prominence=3, sort_order=0)
+    ach = Achievement(job_id=job.id, text="To delete", impact_tags=[], sort_order=0)
     db_session.add(ach)
     db_session.commit()
     ach_id = ach.id

@@ -27,7 +27,7 @@ def serialize_career(db: Session) -> dict:
     ).all()
 
     skills = db.scalars(select(Skill).order_by(Skill.category, Skill.name)).all()
-    projects = db.scalars(select(Project).order_by(Project.prominence.desc(), Project.name)).all()
+    projects = db.scalars(select(Project).order_by(Project.is_active.desc(), Project.name)).all()
     education = db.scalars(select(Education).order_by(Education.end_date.desc())).all()
     certifications = db.scalars(
         select(Certification).order_by(Certification.issue_date.desc())
@@ -50,7 +50,6 @@ def serialize_career(db: Session) -> dict:
                         "text": a.text,
                         "metric": a.metric,
                         "impact_tags": a.impact_tags,
-                        "prominence": a.prominence,
                     }
                     for a in j.achievements
                 ],
@@ -64,7 +63,6 @@ def serialize_career(db: Session) -> dict:
                 "name": p.name,
                 "summary": p.summary,
                 "description": p.description,
-                "prominence": p.prominence,
                 "is_active": p.is_active,
                 "start_date": p.start_date.isoformat() if p.start_date else None,
             }

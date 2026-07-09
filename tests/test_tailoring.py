@@ -858,7 +858,7 @@ def test_plan_item_renders_drag_handle(client, db_session):
 def _make_achievement(db, job_id: int, text: str = "Built thing.", metric: str | None = None):
     from src.models.achievement import Achievement
 
-    a = Achievement(job_id=job_id, text=text, metric=metric, prominence=3, sort_order=0)
+    a = Achievement(job_id=job_id, text=text, metric=metric, sort_order=0)
     db.add(a)
     db.commit()
     db.refresh(a)

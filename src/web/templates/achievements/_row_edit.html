@@ -7,7 +7,7 @@
       <textarea name="text" rows="2" required
                 class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">{{ achievement.text }}</textarea>
     </div>
-    <div class="grid grid-cols-3 gap-3">
+    <div class="grid grid-cols-2 gap-3">
       <div>
         <input type="text" name="metric" placeholder="Metric"
                value="{{ achievement.metric or '' }}"
@@ -16,11 +16,6 @@
       <div>
         <input type="text" name="impact_tags" placeholder="Tags (comma-separated)"
                value="{{ achievement.impact_tags | join(', ') }}"
-               class="w-full rounded border border-gray-300 px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-400">
-      </div>
-      <div>
-        <input type="number" name="prominence" min="1" max="5"
-               value="{{ achievement.prominence }}"
                class="w-full rounded border border-gray-300 px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-400">
       </div>
     </div>

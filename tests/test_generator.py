@@ -42,7 +42,6 @@ def make_session_with_plan(db) -> TailoringSession:
         job_id=job.id,
         text="Scaled the API gateway to 500M requests per day",
         metric="reduced latency by 40%",
-        prominence=5,
     )
     db.add(ach)
 
@@ -50,7 +49,6 @@ def make_session_with_plan(db) -> TailoringSession:
         name="Bespoke",
         summary="Resume tailoring tool",
         description="LLM-powered resume tailor using FastAPI and HTMX.",
-        prominence=4,
     )
     db.add(proj)
 

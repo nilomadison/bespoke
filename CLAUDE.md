@@ -89,7 +89,7 @@ Any change to the generator, resolver, planner, or their prompts must keep these
 ## Discipline for prompt and schema changes
 
 - **Prompt edits.** When you change anything under `prompts/`, run two sessions over the same fixture JD (one before, one after) and use `python -m src.tools.prompt_compare {analyze|plan|generate|cover_letter} <id_before> <id_after>` to inspect the delta. Commit the prompt change only after reading that diff.
-- **Model edits.** Any change to `src/models/` requires a generated and committed Alembic migration in `alembic/versions/`. Don't ship a model change with "I'll do the migration later" — the next person to run `alembic upgrade head` will diverge.
+- **Model edits.** Any change to `src/models/` requires a generated and committed Alembic migration in `alembic/versions/`, stacked on top of `0001_baseline` (the consolidated full-schema baseline). `create_all()` in `init_db()` and the baseline are kept in lockstep — they must produce identical schema — so autogenerate the migration (`alembic revision --autogenerate -m "msg"`) and commit it alongside the model change. Don't ship a model change with "I'll do the migration later," or the next person to run `alembic upgrade head` will diverge from `create_all()`.
 
 ## Conventions
 

@@ -92,7 +92,7 @@ pytest
 **Database migrations** (Alembic, SQLite):
 
 ```bash
-alembic upgrade head       # apply new migrations to an existing db
+alembic upgrade head       # build a blank db from scratch, or apply new migrations to an existing one
 alembic history            # see migration history
 alembic current            # check current revision
 ```
@@ -105,7 +105,7 @@ python -m src.db.seed
 alembic stamp head
 ```
 
-> `alembic upgrade head` alone will fail on a blank database — the baseline migration is a no-op stub that assumes tables already exist. `python -m src.db.seed` builds the schema via `create_all()`, and `alembic stamp head` syncs the version table without re-running migrations.
+> Either path builds the schema: `python -m src.db.seed` creates the tables via `create_all()` (kept in lockstep with the `0001_baseline` migration) and `alembic stamp head` marks the version table as current without re-running migrations. Alternatively, `alembic upgrade head` builds the schema directly from the baseline migration before you seed.
 
 ## Project structure
 

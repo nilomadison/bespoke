@@ -19,16 +19,18 @@ pytest tests/test_planner.py::test_build_plan_returns_plan_items
 ruff check .
 ruff format .
 
-# Migrations (SQLite via Alembic) — for applying new migrations to an EXISTING db
+# Migrations (SQLite via Alembic). `0001_baseline` is a full-schema migration,
+# so `alembic upgrade head` builds a blank db from scratch AND applies new
+# migrations to an existing one. (The old 0001-0007 history was squashed into it.)
 alembic upgrade head
 alembic revision --autogenerate -m "msg"
 
 # Re-seed local DB from data/seed.yaml (safe to re-run; upserts, no duplicates)
 python -m src.db.seed
 
-# Wipe and reseed from scratch — do NOT use `alembic upgrade head` on a blank db.
-# The baseline migration (0001) is a no-op stub; it assumes tables already exist.
-# create_all() in init_db() builds the schema; stamp tells Alembic the db is current.
+# Wipe and reseed from scratch. `python -m src.db.seed` builds the schema via
+# create_all() in init_db(), which is kept in lockstep with 0001_baseline, so the
+# stamp just marks the db as current. (`alembic upgrade head` before seeding works too.)
 rm data/bespoke.db && python -m src.db.seed && alembic stamp head
 
 # Compare two tailoring sessions (prompt A/B)
